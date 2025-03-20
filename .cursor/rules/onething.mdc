@@ -1,0 +1,253 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+{
+  "version": "1.1",
+  "description": "Cursor rules for OneThing AI Companion App project. Optimized for React, TypeScript, Tailwind CSS, Zustand, MUI, Express, GraphQL, DeepSeek API, LangChain.",
+  "language_rules": {
+    "typescript": {
+      "rules": [
+        // React & JSX specific rules
+        {
+          "type": "completion",
+          "trigger": "<",
+          "action": "complete-react-jsx-element",
+          "description": "Complete React JSX elements and components"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "React.FC<",
+          "action": "suggest-react-fc-props-interface",
+          "description": "Suggest interface structure for React Functional Component props"
+        },
+        {
+          "type": "completion",
+          "trigger": "useState(",
+          "action": "complete-react-usestate-hook",
+          "description": "Complete React useState hook with type inference"
+        },
+        {
+          "type": "completion",
+          "trigger": "useEffect(",
+          "action": "complete-react-useeffect-hook",
+          "description": "Complete React useEffect hook"
+        },
+        // MUI Component rules
+        {
+          "type": "completion",
+          "trigger": "<Mui",
+          "action": "complete-mui-component-name",
+          "description": "Complete MUI (Material UI) component names (e.g., <MuiButton, <MuiTextField)"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "<MuiButton ",
+          "action": "suggest-mui-button-props",
+          "description": "Suggest common props for MUI Button component (variant, color, onClick)"
+        },
+        // Zustand State Management rules
+        {
+          "type": "completion",
+          "trigger": "useStore(",
+          "action": "complete-zustand-usestore-hook",
+          "description": "Complete Zustand useStore hook for state access"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "store.",
+          "action": "suggest-zustand-store-actions",
+          "description": "Suggest actions (functions) defined in Zustand store"
+        },
+        // General TypeScript rules (from previous version - keep them)
+        {
+          "type": "suggestion",
+          "trigger": "interface ",
+          "action": "suggest-interface-structure",
+          "description": "Suggest interface structure based on context"
+        },
+        {
+          "type": "completion",
+          "trigger": "type ",
+          "action": "complete-type-definition",
+          "description": "Complete TypeScript type definitions"
+        }
+        // ... Add more TypeScript & React specific rules as needed
+      ]
+    },
+    "javascript": {
+      "rules": [
+        // Basic JavaScript rules (if needed for backend or utils)
+      ]
+    },
+    "json": {
+      "rules": [
+        // API Endpoint suggestions (for REST or GraphQL - adapt action if needed)
+        {
+          "type": "suggestion",
+          "trigger": "\"apiEndpoint\": \"",
+          "action": "suggest-api-endpoints-from-backend-routes", // More descriptive action
+          "description": "Suggest API endpoints from backend Express routes (if routes are parsable)"
+        },
+        // GraphQL Query/Mutation structure suggestions
+        {
+          "type": "suggestion",
+          "trigger": "query MyQuery {",
+          "action": "suggest-graphql-query-fields-from-schema", // Placeholder action - check Cursor capabilities
+          "description": "Suggest fields for GraphQL query based on schema (if schema is accessible)"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "mutation MyMutation {",
+          "action": "suggest-graphql-mutation-fields-from-schema", // Placeholder action
+          "description": "Suggest fields for GraphQL mutation based on schema (if schema is accessible)"
+        }
+      ]
+    },
+    "graphql": { // Add GraphQL language rules if Cursor supports GraphQL language mode
+      "rules": [
+        {
+          "type": "completion",
+          "trigger": "type ",
+          "action": "complete-graphql-type-definition",
+          "description": "Complete GraphQL type definitions in schema files"
+        },
+        {
+          "type": "completion",
+          "trigger": "query ",
+          "action": "complete-graphql-query-definition",
+          "description": "Complete GraphQL query definitions"
+        },
+        {
+          "type": "completion",
+          "trigger": "mutation ",
+          "action": "complete-graphql-mutation-definition",
+          "description": "Complete GraphQL mutation definitions"
+        }
+        // ... More GraphQL specific rules (directives, interfaces, etc.)
+      ]
+    }
+    // ... Other language rules if needed
+  },
+  "project_rules": {
+    "code_style": {
+      "rules": [
+        // Keep code style rules - adjust descriptions for clarity
+        {
+          "type": "suggestion",
+          "trigger": "const ",
+          "action": "suggest-camelCase-variable-name",
+          "description": "Suggest camelCase variable names in JavaScript and TypeScript"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "function ",
+          "action": "suggest-descriptive-function-name",
+          "description": "Suggest descriptive and action-oriented function names"
+        }
+        // ... More code style rules - consider adding Tailwind CSS class suggestions?
+      ]
+    },
+    "ai_model_interaction": {
+      "rules": [
+        // DeepSeek API specific rules (primary model)
+        {
+          "type": "completion",
+          "trigger": "deepseek.ChatCompletion.create({",
+          "action": "complete-deepseek-api-call-parameters",
+          "description": "Complete DeepSeek ChatCompletion API call parameters based on context and DeepSeek API documentation"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "// DeepSeek Prompt for ",
+          "action": "suggest-prompt-structure-for-deepseek",
+          "description": "Suggest effective Prompt structure and best practices for DeepSeek models for tasks (e.g., bias detection, goal setting, emotion support)"
+        },
+        // OpenAI API rules (fallback model)
+        {
+          "type": "completion",
+          "trigger": "openai.ChatCompletion.create({",
+          "action": "complete-openai-api-call-parameters",
+          "description": "Complete OpenAI ChatCompletion API call parameters based on context and OpenAI API documentation"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "// OpenAI Prompt for ",
+          "action": "suggest-prompt-structure-for-openai",
+          "description": "Suggest effective Prompt structure and best practices for OpenAI models (GPT-3.5/GPT-4) for similar tasks"
+        },
+        // Gemini API rules (fallback model) - Add if you plan to actively use Gemini
+        // ... Similar rules for Gemini API if needed
+      ]
+    },
+    "langchain_rules": {
+      "rules": [
+        // LangChain specific rules - tailored for your app
+        {
+          "type": "completion",
+          "trigger": "new ConversationChain({",
+          "action": "complete-langchain-conversation-chain-config",
+          "description": "Complete LangChain ConversationChain configuration with relevant options (memory, prompt, llm)"
+        },
+        {
+          "type": "suggestion",
+          "trigger": "const agent = new AgentExecutor.from_agent_and_tools({",
+          "action": "suggest-langchain-agent-tools-for-companion-app", // More specific action name
+          "description": "Suggest relevant LangChain Tools for AI Companion App Agents (e.g., Goal Setting Tool, Emotion Recognition Tool, Knowledge Base Tool)"
+        },
+        {
+          "type": "completion",
+          "trigger": "new PromptTemplate({",
+          "action": "complete-langchain-prompt-template",
+          "description": "Complete LangChain PromptTemplate definition with input variables and template"
+        }
+        // ... More LangChain rules relevant to your application logic
+      ]
+    },
+    "testing_rules": {
+      "rules": [
+        // Testing rules - keep and refine
+        {
+          "type": "suggestion",
+          "trigger": "describe('",
+          "action": "suggest-test-case-description",
+          "description": "Suggest descriptive test case descriptions for Jest/Mocha tests"
+        },
+        {
+          "type": "completion",
+          "trigger": "expect(",
+          "action": "complete-jest-expect-assertion",
+          "description": "Complete Jest expect assertions for React Testing Library and Jest tests"
+        },
+        {
+          "type": "completion",
+          "trigger": "assert.",
+          "action": "complete-chai-assert-assertion",
+          "description": "Complete Chai assert assertions for backend Mocha/Chai tests"
+        }
+        // ... More testing rules - consider React Testing Library specific completions?
+      ]
+    }
+    // ... Add more project level rules as needed - e.g., Firebase rules if you use Firebase SDK directly in code
+  },
+  "excludeFolders": [
+    "node_modules",
+    "build",
+    "dist",
+    ".git",
+    ".cursor",
+    "coverage"
+  ],
+  "excludeFiles": [
+    "*.test.ts",
+    "*.test.js",
+    "*.spec.ts",
+    "*.spec.js",
+    "*.d.ts",
+    "package-lock.json",
+    "yarn.lock"
+  ]
+}
