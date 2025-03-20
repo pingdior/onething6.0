@@ -251,3 +251,39 @@ alwaysApply: true
     "yarn.lock"
   ]
 }
+
+// 复盘数据结构
+interface ReviewData {
+  timeRange: {
+    start: Date;
+    end: Date;
+    type: 'week' | 'month' | 'custom';
+  };
+  
+  overallProgress: {
+    completionRate: number;
+    totalTasks: number;
+    completedTasks: number;
+  };
+  
+  goalDetails: Array<{
+    id: string;
+    name: string;
+    progress: number;
+    completedItems: string[];
+    timeSpent: number;
+    efficiency: {
+      bestTimeSlots: string[];
+      focusRate: number;
+      interruptions: number;
+    };
+  }>;
+  
+  timeAnalysis: {
+    heatmapData: Array<{
+      time: string;
+      efficiency: number;
+    }>;
+    bestTimeSlots: string[];
+  };
+}

@@ -7,8 +7,16 @@
     <style>
         /* 全局样式 */
         :root {
-            --primary-color: #7C6BFF;
-            --secondary-color: #4BD0A0;
+            /* 主色系 */
+            --primary-color: #FFCD00; /* 主黄色 */
+            --secondary-color: #000000; /* 黑色 */
+            --tertiary-color: #7A5C00; /* 深棕色 */
+            --quaternary-color: #9E7600; /* 浅棕色 */
+            
+            /* 文字系统 */
+            --heading-font: 'Archivo', sans-serif;
+            --body-font: 'Inter', sans-serif;
+            
             --warning-color: #FFB054;
             --danger-color: #EF4444;
             --gray-100: #F3F4F6;
@@ -25,7 +33,6 @@
             --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --font-sans: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
             --bg-warm: #FFF9F2;
             --card-bg: #FFFFFF;
             --text-dark: #3D3D3D;
@@ -35,14 +42,14 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: var(--font-sans);
+            font-family: var(--body-font);
         }
 
         body {
             background-color: var(--gray-100);
             color: var(--text-dark);
             line-height: 1.6;
-            font-family: 'Plus Jakarta Sans', 'PingFang SC', sans-serif;
+            font-family: var(--body-font);
         }
 
         .app-container {
@@ -114,7 +121,7 @@
         /* 侧边导航栏 */
         .sidebar {
             width: 200px;
-            background: linear-gradient(180deg, #6357CC 0%, #8679FF 100%);
+            background: linear-gradient(180deg, var(--secondary-color) 0%, var(--tertiary-color) 100%);
             color: var(--white);
             padding: 1.5rem 0;
         }
@@ -133,6 +140,7 @@
 
         .nav-item.active {
             background-color: var(--primary-color);
+            color: var(--secondary-color);
         }
 
         /* 内容区域 */
@@ -197,11 +205,12 @@
 
         .btn-primary {
             background-color: var(--primary-color);
-            color: var(--white);
+            color: var(--secondary-color);
         }
 
         .btn-primary:hover {
-            background-color: #4338CA;
+            background-color: var(--tertiary-color);
+            color: white;
         }
 
         .btn-secondary {
@@ -253,7 +262,7 @@
 
         .progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #7C6BFF 0%, #9F93FF 100%);
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--tertiary-color) 100%);
             border-radius: 4px;
         }
 
@@ -717,7 +726,7 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #7C6BFF 0%, #4BD0A0 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--tertiary-color) 100%);
             margin: 0 auto 1rem;
             display: flex;
             align-items: center;
@@ -939,7 +948,90 @@
         .grid-cols-2 {
             grid-template-columns: repeat(2, 1fr);
         }
+
+        /* 添加看板样式 */
+        .kanban-container {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .kanban-column {
+            flex: 1;
+            min-width: 250px;
+            background-color: var(--gray-100);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+
+        .kanban-column-header {
+            font-weight: 600;
+            padding: 0.5rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-300);
+        }
+
+        .kanban-item {
+            background-color: white;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            cursor: grab;
+        }
+
+        .kanban-item-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .kanban-item-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .kanban-item-source {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        .kanban-item.completed {
+            background-color: var(--gray-100);
+            text-decoration: line-through;
+            color: var(--gray-500);
+        }
+
+        /* 添加语言选择器样式 */
+        .language-selector {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        .language-selector select {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--gray-300);
+            background-color: white;
+        }
+
+        /* 为阿拉伯语等RTL语言添加支持 */
+        [dir="rtl"] {
+            text-align: right;
+        }
+
+        [dir="rtl"] .header-right {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .sidebar {
+            right: 0;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -977,6 +1069,16 @@
                 <div class="avatar">
                     <span>张</span>
                 </div>
+            </div>
+            <div class="language-selector">
+                <select id="language-select" onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                    <option value="ar">العربية</option>
+                </select>
             </div>
         </header>
 
@@ -1179,43 +1281,80 @@
                                 <div>2024-03-19 <button class="btn btn-sm btn-secondary">日历</button></div>
                             </div>
                             <div class="tabs">
-                                <div class="tab active">时间线</div>
-                                <div class="tab">看板</div>
+                                <div class="tab active" onclick="switchTaskView('timeline')">时间线</div>
+                                <div class="tab" onclick="switchTaskView('kanban')">看板</div>
                             </div>
-                            <div class="text-sm font-bold mb-4">上午</div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox">
-                                <div class="task-content">
-                                    <div class="task-time">9:00-10:30</div>
-                                    <div class="task-title">PMP章节学习</div>
-                                    <div class="task-source">🎯来自：PMP认证</div>
+                            <div id="timeline-view">
+                                <div class="text-sm font-bold mb-4">上午</div>
+                                <div class="task-item">
+                                    <input type="checkbox" class="task-checkbox">
+                                    <div class="task-content">
+                                        <div class="task-time">9:00-10:30</div>
+                                        <div class="task-title">PMP章节学习</div>
+                                        <div class="task-source">🎯来自：PMP认证</div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-sm btn-secondary">拖动调整</button>
+                                    </div>
                                 </div>
-                                <div class="task-actions">
-                                    <button class="btn btn-sm btn-secondary">拖动调整</button>
+                                <div class="task-item">
+                                    <input type="checkbox" class="task-checkbox">
+                                    <div class="task-content">
+                                        <div class="task-time">11:00-12:00</div>
+                                        <div class="task-title">团队周会</div>
+                                        <div class="task-source">📅工作安排</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm font-bold mt-2 mb-4">下午</div>
+                                <div class="task-item">
+                                    <input type="checkbox" class="task-checkbox" checked>
+                                    <div class="task-content">
+                                        <div class="task-time">13:00-14:00</div>
+                                        <div class="task-title">回复邮件</div>
+                                    </div>
+                                </div>
+                                <div class="task-item">
+                                    <input type="checkbox" class="task-checkbox">
+                                    <div class="task-content">
+                                        <div class="task-time">15:00-16:00</div>
+                                        <div class="task-title">健身训练</div>
+                                        <div class="task-source">💪来自：健身计划</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox">
-                                <div class="task-content">
-                                    <div class="task-time">11:00-12:00</div>
-                                    <div class="task-title">团队周会</div>
-                                    <div class="task-source">📅工作安排</div>
-                                </div>
-                            </div>
-                            <div class="text-sm font-bold mt-2 mb-4">下午</div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox" checked>
-                                <div class="task-content">
-                                    <div class="task-time">13:00-14:00</div>
-                                    <div class="task-title">回复邮件</div>
-                                </div>
-                            </div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox">
-                                <div class="task-content">
-                                    <div class="task-time">15:00-16:00</div>
-                                    <div class="task-title">健身训练</div>
-                                    <div class="task-source">💪来自：健身计划</div>
+                            <div id="kanban-view" style="display: none;">
+                                <div class="kanban-container">
+                                    <div class="kanban-column">
+                                        <div class="kanban-column-header">待办</div>
+                                        <div class="kanban-item">
+                                            <div class="kanban-item-title">PMP章节学习</div>
+                                            <div class="kanban-item-time">9:00-10:30</div>
+                                            <div class="kanban-item-source">🎯 PMP认证</div>
+                                        </div>
+                                        <div class="kanban-item">
+                                            <div class="kanban-item-title">团队周会</div>
+                                            <div class="kanban-item-time">11:00-12:00</div>
+                                            <div class="kanban-item-source">📅 工作安排</div>
+                                        </div>
+                                        <div class="kanban-item">
+                                            <div class="kanban-item-title">健身训练</div>
+                                            <div class="kanban-item-time">15:00-16:00</div>
+                                            <div class="kanban-item-source">💪 健身计划</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="kanban-column">
+                                        <div class="kanban-column-header">进行中</div>
+                                        <!-- 空看板列，可拖动卡片至此 -->
+                                    </div>
+                                    
+                                    <div class="kanban-column">
+                                        <div class="kanban-column-header">已完成</div>
+                                        <div class="kanban-item completed">
+                                            <div class="kanban-item-title">回复邮件</div>
+                                            <div class="kanban-item-time">13:00-14:00</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1232,13 +1371,17 @@
                                     <button class="btn btn-sm btn-secondary">年</button>
                                 </div>
                             </div>
-                            <div class="emotion-trend"></div>
+                            <div class="emotion-trend">
+                                <canvas id="emotionTrendChart"></canvas>
+                            </div>
                         </div>
                         <div class="card">
                             <div class="card-title">情绪记录</div>
                             <div>今天的情绪：😊</div>
                             <div style="margin: 1rem 0;">近期情绪分布：</div>
-                            <div class="emotion-distribution"></div>
+                            <div class="emotion-distribution">
+                                <canvas id="emotionDistributionChart"></canvas>
+                            </div>
                             <div class="text-sm text-gray">😊 60% 😐 25% 😟 15%</div>
                         </div>
                         <div class="card">
@@ -1573,6 +1716,155 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleTask(checkbox);
         }
     });
+});
+
+// 情绪趋势图
+const emotionTrendCtx = document.getElementById('emotionTrendChart').getContext('2d');
+const emotionTrendChart = new Chart(emotionTrendCtx, {
+    type: 'line',
+    data: {
+        labels: ['3/13', '3/14', '3/15', '3/16', '3/17', '3/18', '3/19'],
+        datasets: [
+            {
+                label: '愉悦度',
+                data: [65, 70, 55, 60, 75, 85, 80],
+                borderColor: '#7C6BFF',
+                backgroundColor: 'rgba(124, 107, 255, 0.1)',
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: '能量水平',
+                data: [70, 65, 60, 70, 75, 80, 85],
+                borderColor: '#4BD0A0',
+                backgroundColor: 'rgba(75, 208, 160, 0.1)',
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                min: 0,
+                max: 100
+            }
+        }
+    }
+});
+
+// 情绪分布饼图
+const emotionDistributionCtx = document.getElementById('emotionDistributionChart').getContext('2d');
+const emotionDistributionChart = new Chart(emotionDistributionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['愉快', '平静', '担忧'],
+        datasets: [{
+            data: [60, 25, 15],
+            backgroundColor: [
+                '#4BD0A0',
+                '#7C6BFF',
+                '#FFB054'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+
+function switchTaskView(viewType) {
+    const tabs = document.querySelectorAll('.tabs .tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    const timelineView = document.getElementById('timeline-view');
+    const kanbanView = document.getElementById('kanban-view');
+    
+    if (viewType === 'timeline') {
+        tabs[0].classList.add('active');
+        timelineView.style.display = 'block';
+        kanbanView.style.display = 'none';
+    } else {
+        tabs[1].classList.add('active');
+        timelineView.style.display = 'none';
+        kanbanView.style.display = 'block';
+    }
+}
+
+// 语言包
+const translations = {
+    en: {
+        welcome: "Welcome to OneThing",
+        welcome_subtitle: "Your AI smart goal management assistant, helping you become a better self",
+        start_experience: "Start Experience",
+        watch_video: "Watch Introduction Video",
+        dashboard: "Dashboard",
+        goals: "Goals",
+        tasks: "Tasks",
+        emotions: "Emotions",
+        ai_companion: "AI Companion",
+        settings: "Settings",
+        help: "Help",
+        // ... 更多翻译项
+    },
+    zh: {
+        welcome: "欢迎使用 OneThing",
+        welcome_subtitle: "你的AI智能目标管理助手，帮你实现更好的自己",
+        start_experience: "开始体验",
+        watch_video: "观看介绍视频",
+        dashboard: "仪表盘",
+        goals: "目标",
+        tasks: "任务",
+        emotions: "情绪",
+        ai_companion: "AI伴侣",
+        settings: "设置",
+        help: "帮助",
+        // ... 更多翻译项
+    },
+    // ... 其他语言
+};
+
+// 语言切换函数
+function changeLanguage(lang) {
+    // 设置页面方向 (针对阿拉伯语等RTL语言)
+    if (lang === 'ar') {
+        document.dir = 'rtl';
+    } else {
+        document.dir = 'ltr';
+    }
+    
+    // 应用翻译
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+            element.textContent = translations[lang][key];
+        }
+    });
+    
+    // 保存语言偏好
+    localStorage.setItem('preferred_language', lang);
+}
+
+// 页面加载时应用已保存的语言设置
+document.addEventListener('DOMContentLoaded', function() {
+    const savedLang = localStorage.getItem('preferred_language') || 'en';
+    document.getElementById('language-select').value = savedLang;
+    changeLanguage(savedLang);
 });
 </script>
 
