@@ -11,6 +11,7 @@ const Emotions = React.lazy(() => import('./pages/Emotions'));
 const Companion = React.lazy(() => import('./pages/Companion'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const Help = React.lazy(() => import('./pages/Help'));
+const Review = React.lazy(() => import('./pages/Review'));
 
 function App() {
   const [isAppStarted, setIsAppStarted] = useState(false);
@@ -39,6 +40,7 @@ function App() {
             <Route path="/companion" element={<Companion />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />
+            <Route path="/review" element={<Review />} />
           </Routes>
         </React.Suspense>
       </div>

@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
+import { useTaskStore } from '../store/taskStore';
+import { useGoalStore } from '../store/goalStore';
 
 const Dashboard: React.FC = () => {
   const formatDate = () => {
     const now = new Date();
-    return now.toISOString().split('T')[0]; // 简易日期格式化，实际项目中可以使用更好的格式化库
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'long' };
+    return now.toLocaleDateString('zh-CN', options);
   };
 
-  // 添加简单的任务切换功能
-  const [taskStates, setTaskStates] = useState({
-    task1: false,
-    task2: false,
-    task3: true,
-    task4: false
+  // 获取任务和目标数据
+  const tasks = useTaskStore(state => state.tasks);
+  const toggleTaskCompletion = useTaskStore(state => state.toggleTaskCompletion);
+  const goals = useGoalStore(state => state.goals);
+  
+  // 计算未完成任务数量
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const incompleteTasks = totalTasks - completedTasks;
+  
+  // 获取今日情绪状态（这里简化处理，实际应该从情绪存储获取）
+  const emotionStatus = '😊';
+  
+  // 按时间排序任务
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const aTime = a.timeRange?.start || '';
+    const bTime = b.timeRange?.start || '';
+    return aTime.localeCompare(bTime);
   });
-
-  const toggleTask = (taskId: keyof typeof taskStates) => {
-    setTaskStates(prev => ({
-      ...prev,
-      [taskId]: !prev[taskId]
-    }));
-  };
+  
+  // 获取前4个高优先级目标
+  const topGoals = [...goals]
+    .sort((a, b) => {
+      const priorityValue = { high: 3, medium: 2, low: 1 };
+      return priorityValue[b.priority] - priorityValue[a.priority];
+    })
+    .slice(0, 2);
 
   return (
     <AppLayout>
@@ -29,18 +46,22 @@ const Dashboard: React.FC = () => {
           <span>今日概览</span>
           <span>{formatDate()}</span>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-          <div style={{ flex: 1, padding: '1rem', backgroundColor: 'var(--gray-100)', borderRadius: '0.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>待完成任务</div>
-            <div style={{ fontWeight: 600 }}>5/8</div>
+        <div className="flex gap-4">
+          <div className="flex-1 p-4 bg-gray-100 rounded-lg text-center">
+            <div className="text-sm text-gray-500">待完成任务</div>
+            <div className="font-semibold">{incompleteTasks}/{totalTasks}</div>
           </div>
-          <div style={{ flex: 1, padding: '1rem', backgroundColor: 'var(--gray-100)', borderRadius: '0.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>目标进度</div>
-            <div style={{ fontWeight: 600 }}>68%</div>
+          <div className="flex-1 p-4 bg-gray-100 rounded-lg text-center">
+            <div className="text-sm text-gray-500">目标进度</div>
+            <div className="font-semibold">
+              {goals.length > 0 
+                ? Math.round(goals.reduce((sum, goal) => sum + goal.completionRate, 0) / goals.length) 
+                : 0}%
+            </div>
           </div>
-          <div style={{ flex: 1, padding: '1rem', backgroundColor: 'var(--gray-100)', borderRadius: '0.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>情绪状态</div>
-            <div style={{ fontWeight: 600 }}>😊</div>
+          <div className="flex-1 p-4 bg-gray-100 rounded-lg text-center">
+            <div className="text-sm text-gray-500">情绪状态</div>
+            <div className="font-semibold">{emotionStatus}</div>
           </div>
         </div>
       </div>
@@ -48,95 +69,68 @@ const Dashboard: React.FC = () => {
       <div className="card">
         <div className="card-title">
           <span>今日待办</span>
-          <button className="btn btn-sm btn-secondary">排序</button>
+          <Link to="/tasks" className="btn btn-sm btn-secondary">查看全部</Link>
         </div>
-        <div className="task-item">
-          <input 
-            type="checkbox" 
-            className="task-checkbox" 
-            checked={taskStates.task1}
-            onChange={() => toggleTask('task1')}
-          />
-          <div className="task-content">
-            <div className="task-time">9:00</div>
-            <div className="task-title">完成项目提案初稿</div>
+        {sortedTasks.slice(0, 4).map(task => (
+          <div key={task.id} className="task-item">
+            <input 
+              type="checkbox" 
+              className="mr-3" 
+              checked={task.completed}
+              onChange={() => toggleTaskCompletion(task.id)}
+            />
+            <div className="flex-1">
+              <div className="text-sm text-gray-500">{task.time}</div>
+              <div className={`font-medium ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                {task.title}
+              </div>
+              {task.goalName && (
+                <div className="text-xs text-gray-500">
+                  {task.goalId?.startsWith('1') ? '🎯' : '💪'} 来自：{task.goalName}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="task-item">
-          <input 
-            type="checkbox" 
-            className="task-checkbox" 
-            checked={taskStates.task2}
-            onChange={() => toggleTask('task2')}
-          />
-          <div className="task-content">
-            <div className="task-time">11:00</div>
-            <div className="task-title">团队周会</div>
+        ))}
+        {sortedTasks.length === 0 && (
+          <div className="text-center py-6 text-gray-500">
+            <p>今天暂时没有待办任务</p>
+            <Link to="/tasks" className="btn btn-primary mt-2">添加任务</Link>
           </div>
-        </div>
-        <div className="task-item">
-          <input 
-            type="checkbox" 
-            className="task-checkbox" 
-            checked={taskStates.task3}
-            onChange={() => toggleTask('task3')}
-          />
-          <div className="task-content">
-            <div className="task-time">13:00</div>
-            <div className="task-title">回复重要邮件</div>
-          </div>
-        </div>
-        <div className="task-item">
-          <input 
-            type="checkbox" 
-            className="task-checkbox" 
-            checked={taskStates.task4}
-            onChange={() => toggleTask('task4')}
-          />
-          <div className="task-content">
-            <div className="task-time">15:00</div>
-            <div className="task-title">健身</div>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="card">
         <div className="card-title">
           <span>目标进展</span>
-          <a href="/goals" style={{ fontSize: '0.875rem' }}>查看全部 &gt;</a>
+          <Link to="/goals" className="text-sm">查看全部 &gt;</Link>
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>项目管理认证</div>
-            <div>68%</div>
+        {topGoals.map(goal => (
+          <div key={goal.id} className="mb-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <span className="mr-2">{goal.icon || '🎯'}</span>
+                <span>{goal.title}</span>
+              </div>
+              <div>{goal.completionRate}%</div>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-2 mb-1">
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-tertiary rounded-full"
+                style={{ width: `${goal.completionRate}%` }}
+              ></div>
+            </div>
+            <div className="text-xs text-gray-500">
+              子目标：{goal.subGoals?.filter(sg => sg.completed).length || 0}/{goal.subGoals?.length || 0} 已完成
+            </div>
           </div>
-          <div style={{ height: '8px', backgroundColor: 'var(--gray-200)', borderRadius: '4px', overflow: 'hidden', margin: '0.5rem 0' }}>
-            <div 
-              style={{ 
-                height: '100%', 
-                width: '68%', 
-                background: 'linear-gradient(90deg, var(--primary-color) 0%, var(--tertiary-color) 100%)',
-                borderRadius: '4px'
-              }}
-            ></div>
+        ))}
+        {goals.length === 0 && (
+          <div className="text-center py-6 text-gray-500">
+            <p>暂时没有设定目标</p>
+            <Link to="/goals" className="btn btn-primary mt-2">设定目标</Link>
           </div>
-        </div>
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>健身计划</div>
-            <div>45%</div>
-          </div>
-          <div style={{ height: '8px', backgroundColor: 'var(--gray-200)', borderRadius: '4px', overflow: 'hidden', margin: '0.5rem 0' }}>
-            <div 
-              style={{ 
-                height: '100%', 
-                width: '45%', 
-                background: 'linear-gradient(90deg, var(--primary-color) 0%, var(--tertiary-color) 100%)',
-                borderRadius: '4px'
-              }}
-            ></div>
-          </div>
-        </div>
+        )}
       </div>
     </AppLayout>
   );
