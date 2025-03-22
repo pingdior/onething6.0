@@ -117,7 +117,8 @@ const ConversationMemory: React.FC<ConversationMemoryProps> = ({
     setIsLoading(true);
     
     // 检查是否包含任务创建意图
-    const hasTaskCreationIntent = /创建任务|添加任务|新任务|新增任务/g.test(inputMessage);
+    const hasTaskCreationIntent = /创建任务|添加任务|新任务|新增任务|记录任务|安排任务/g.test(inputMessage);
+    console.log('检测任务创建意图:', hasTaskCreationIntent);
     
     try {
       // 将上下文信息附加到请求中
@@ -142,6 +143,7 @@ const ConversationMemory: React.FC<ConversationMemoryProps> = ({
       // 处理任务创建意图
       if (hasTaskCreationIntent && onCreateTask) {
         const taskTitle = extractTaskTitle(inputMessage);
+        console.log('提取的任务标题:', taskTitle);
         if (taskTitle) {
           onCreateTask(taskTitle);
         }
@@ -178,7 +180,7 @@ const ConversationMemory: React.FC<ConversationMemoryProps> = ({
   // 从用户消息中提取任务标题
   const extractTaskTitle = (message: string): string | null => {
     // 简单的规则提取
-    const taskRegex = /[创建|添加|新建]任务[：:]\s*(.+)$/;
+    const taskRegex = /[创建|添加|新建|记录|安排]任务[：:]\s*(.+)$/;
     const match = message.match(taskRegex);
     
     if (match && match[1]) {
@@ -188,8 +190,19 @@ const ConversationMemory: React.FC<ConversationMemoryProps> = ({
     // 更通用的提取方式
     const lines = message.split(/[\n,.，。]/);
     for (const line of lines) {
-      if (line.includes('任务') && line.length < 30) {
-        return line.replace(/[创建|添加|新建]任务[：:]?\s*/g, '').trim();
+      if (line.includes('任务') && line.length < 50) {
+        const cleanLine = line.replace(/[创建|添加|新建|记录|安排]任务[：:：]?\s*/g, '').trim();
+        if (cleanLine.length > 0) {
+          return cleanLine;
+        }
+      }
+    }
+    
+    // 尝试直接提取句子中可能的任务描述
+    if (message.includes('任务') && message.length < 100) {
+      const taskPart = message.split(/任务[是为:：]?/)[1];
+      if (taskPart && taskPart.trim().length > 0) {
+        return taskPart.trim();
       }
     }
     

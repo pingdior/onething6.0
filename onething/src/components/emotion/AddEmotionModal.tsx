@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { EmotionType, EmotionRecord } from '../../store/emotionStore';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
@@ -83,158 +83,145 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ onClose, onSave, init
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">
-            {initialRecord ? '编辑情绪记录' : '添加情绪记录'}
-          </h2>
-          <button 
-            className="text-gray-500 hover:text-gray-700"
-            onClick={onClose}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2">日期</label>
-          <input 
-            type="date" 
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          />
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2">选择情绪</label>
-          <div className="grid grid-cols-7 gap-2">
-            {emotionOptions.map(option => (
-              <div 
-                key={option.type}
-                className={`cursor-pointer p-3 rounded-lg flex flex-col items-center ${
-                  selectedEmotion === option.type 
-                    ? 'bg-primary bg-opacity-10 border-2 border-primary' 
-                    : 'border border-gray-200 hover:bg-gray-50'
-                }`}
-                onClick={() => handleSelectEmotion(option.type)}
-              >
-                <span className="text-2xl mb-1">{option.emoji}</span>
-                <span className="text-xs">{option.label}</span>
-              </div>
-            ))}
+    <div className="modal">
+      <div className="modal-content">
+        <div className="modal-header">
+          <div className="modal-title">
+            {initialRecord ? '编辑情绪记录' : '记录今日情绪'}
+          </div>
+          <div className="modal-close" onClick={onClose}>
+            &times;
           </div>
         </div>
         
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-gray-700 font-medium">情绪强度: {intensity}</label>
-            <span className="text-sm text-gray-500">1-10</span>
-          </div>
-          <input 
-            type="range" 
-            min="1" 
-            max="10" 
-            value={intensity}
-            onChange={(e) => setIntensity(parseInt(e.target.value))}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>弱</span>
-            <span>中等</span>
-            <span>强</span>
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2">记录内容</label>
-          <textarea 
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="今天感觉如何？发生了什么？"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md h-32 resize-none"
-          ></textarea>
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2">影响因素</label>
-          <div className="flex flex-wrap gap-2">
-            {factorOptions.map(factor => (
-              <div 
-                key={factor}
-                className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
-                  selectedFactors.includes(factor)
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                onClick={() => toggleFactor(factor)}
-              >
-                {factor}
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2">关联目标</label>
-          {goals.length > 0 ? (
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {goals.map(goal => (
+        <div className="modal-body">
+          <div className="mb-4">
+            <div className="form-label">你今天感觉如何？</div>
+            <div className="emotion-grid">
+              {emotionOptions.map(option => (
                 <div 
-                  key={goal.id}
-                  className={`cursor-pointer p-3 rounded-lg flex items-center ${
-                    selectedGoalIds.includes(goal.id) 
-                      ? 'bg-primary bg-opacity-10 border border-primary' 
-                      : 'border border-gray-200 hover:bg-gray-50'
-                  }`}
-                  onClick={() => toggleGoal(goal.id)}
+                  key={option.type}
+                  className={`emotion-item ${selectedEmotion === option.type ? 'active' : ''}`}
+                  onClick={() => handleSelectEmotion(option.type)}
                 >
-                  <span className="mr-2">{goal.icon || '🎯'}</span>
-                  <span>{goal.title}</span>
+                  <div className="emotion-icon">{option.emoji}</div>
+                  <div className="text-sm">{option.label}</div>
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-gray-500">暂无目标</p>
-          )}
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2">关联任务</label>
-          {tasks.length > 0 ? (
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {tasks.map(task => (
+          </div>
+          
+          <div className="mb-4">
+            <div className="form-label">情绪强度：</div>
+            <div className="flex items-center mb-1">
+              <span className="mr-2">弱</span>
+              <input 
+                type="range" 
+                min="1" 
+                max="10" 
+                value={intensity} 
+                onChange={(e) => setIntensity(parseInt(e.target.value))}
+                className="w-full"
+              />
+              <span className="ml-2">强</span>
+            </div>
+            <div className="text-center text-sm text-gray-600">{intensity}/10</div>
+          </div>
+          
+          <div className="mb-4">
+            <div className="form-label">关联事件：</div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {factorOptions.map(factor => (
                 <div 
-                  key={task.id}
-                  className={`cursor-pointer p-3 rounded-lg flex items-center justify-between ${
-                    selectedTaskIds.includes(task.id) 
-                      ? 'bg-primary bg-opacity-10 border border-primary' 
-                      : 'border border-gray-200 hover:bg-gray-50'
+                  key={factor}
+                  className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
+                    selectedFactors.includes(factor)
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700'
                   }`}
-                  onClick={() => toggleTask(task.id)}
+                  onClick={() => toggleFactor(factor)}
                 >
-                  <span>{task.title}</span>
-                  <span className="text-sm text-gray-500">{task.time}</span>
+                  {factor}
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-gray-500">暂无任务</p>
+          </div>
+          
+          <div className="mb-4">
+            <div className="form-label">详细描述：</div>
+            <textarea 
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="今天发生了什么？你的感受如何？"
+              className="w-full p-2 border border-gray-300 rounded-lg resize-none"
+              rows={4}
+            ></textarea>
+          </div>
+          
+          <div className="mb-4">
+            <div className="form-label">日期：</div>
+            <input 
+              type="date" 
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          
+          {goals.length > 0 && (
+            <div className="mb-4">
+              <div className="form-label">关联目标：</div>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {goals.map(goal => (
+                  <div 
+                    key={goal.id}
+                    className={`p-2 rounded-lg flex items-center cursor-pointer ${
+                      selectedGoalIds.includes(goal.id)
+                        ? 'bg-primary bg-opacity-10 border border-primary'
+                        : 'border border-gray-200'
+                    }`}
+                    onClick={() => toggleGoal(goal.id)}
+                  >
+                    <span className="mr-2">{goal.icon || '🎯'}</span>
+                    <span className="text-sm">{goal.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {tasks.length > 0 && (
+            <div className="mb-4">
+              <div className="form-label">关联任务：</div>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {tasks.map(task => (
+                  <div 
+                    key={task.id}
+                    className={`p-2 rounded-lg flex items-center justify-between cursor-pointer ${
+                      selectedTaskIds.includes(task.id)
+                        ? 'bg-primary bg-opacity-10 border border-primary'
+                        : 'border border-gray-200'
+                    }`}
+                    onClick={() => toggleTask(task.id)}
+                  >
+                    <span className="text-sm">{task.title}</span>
+                    <span className="text-xs text-gray-500">{task.completed ? '已完成' : '未完成'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
         
-        <div className="flex justify-end space-x-3">
+        <div className="modal-footer">
           <button 
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
+            className="btn btn-secondary"
             onClick={onClose}
           >
             取消
           </button>
           <button 
-            className="px-4 py-2 bg-primary text-white rounded-md"
+            className="btn btn-primary"
             onClick={handleSave}
             disabled={!selectedEmotion || !note}
           >

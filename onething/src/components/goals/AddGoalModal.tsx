@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGoalStore } from '../../store/goalStore';
+import { autoBreakdownGoal } from '../../services/aiService';
 
 interface AddGoalModalProps {
   onClose: () => void;
@@ -14,13 +15,21 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ onClose, onAIHelp }) => {
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [deadline, setDeadline] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('🎯');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   const addGoal = useGoalStore(state => state.addGoal);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title || !deadline) return;
+    
+    // 添加AI自动目标分解功能
+    if (e.nativeEvent && (e.nativeEvent as any).submitter?.name === 'ai-breakdown') {
+      await handleAIBreakdown();
+      return;
+    }
     
     addGoal({
       title,
@@ -33,6 +42,37 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ onClose, onAIHelp }) => {
     });
     
     onClose();
+  };
+
+  // 新增：AI自动分解目标函数
+  const handleAIBreakdown = async () => {
+    if (!title) {
+      setErrorMessage('请先输入目标名称');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setErrorMessage('');
+      
+      const subGoals = await autoBreakdownGoal(title, description);
+      
+      const goalId = addGoal({
+        title,
+        description,
+        priority,
+        deadline,
+        completionRate: 0,
+        icon: selectedIcon,
+        subGoals
+      });
+
+      setIsLoading(false);
+      onClose();
+    } catch (error: any) {
+      setIsLoading(false);
+      setErrorMessage(`自动分解目标失败: ${error.message}`);
+    }
   };
   
   const getMinDate = () => {
@@ -59,6 +99,13 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ onClose, onAIHelp }) => {
         </div>
         
         <form onSubmit={handleSubmit}>
+          {/* 显示错误信息 */}
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
+              {errorMessage}
+            </div>
+          )}
+          
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               选择图标
@@ -141,18 +188,28 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ onClose, onAIHelp }) => {
             <button
               type="submit"
               className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              disabled={isLoading}
             >
-              创建目标
+              {isLoading ? '处理中...' : '创建目标'}
             </button>
-            {onAIHelp && (
-              <button
-                type="button"
-                onClick={onAIHelp}
-                className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
-              >
-                让AI帮我分解目标
-              </button>
-            )}
+            <button
+              type="submit"
+              name="ai-breakdown"
+              className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary flex items-center"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  AI分解中...
+                </>
+              ) : (
+                'AI自动分解目标'
+              )}
+            </button>
           </div>
         </form>
       </div>

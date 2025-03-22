@@ -1,0 +1,17 @@
+# 进入项目目录
+cd onething
+
+# 安装所有依赖
+npm install
+
+# 运行开发服务器
+npm start
+
+# 在另一个终端中运行API服务器
+node server.js
+
+# 构建生产版本
+npm run build
+
+# 测试生产版本
+NODE_ENV=production node server.js 

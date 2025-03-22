@@ -1,0 +1,105 @@
+import create from 'zustand';
+import { Goal, SubGoal } from '../types';
+
+interface GoalState {
+  goals: Goal[];
+  loading: boolean;
+  error: string | null;
+  
+  // 操作方法
+  fetchGoals: () => Promise<void>;
+  addGoal: (goal: Omit<Goal, 'id' | 'progress' | 'subgoals'>) => Promise<void>;
+  updateGoal: (id: string, updates: Partial<Omit<Goal, 'id'>>) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+  
+  // 子目标操作
+  addSubGoal: (goalId: string, subgoal: Omit<SubGoal, 'id'>) => Promise<void>;
+  toggleSubGoal: (goalId: string, subgoalId: string) => Promise<void>;
+}
+
+// 模拟数据 - 后期替换为API调用
+const mockGoals: Goal[] = [
+  {
+    id: '1',
+    title: 'PMP认证',
+    priority: 'high',
+    deadline: '2024-06-30',
+    progress: 68,
+    subgoals: [
+      { id: '1-1', title: 'PMBOK第1章', completed: true },
+      { id: '1-2', title: 'PMBOK第2章', completed: true },
+      { id: '1-3', title: 'PMBOK第3章', completed: true },
+      { id: '1-4', title: 'PMBOK第4章', completed: true },
+      { id: '1-5', title: 'PMBOK第5章', completed: false },
+      { id: '1-6', title: 'PMBOK第6章', completed: false },
+    ]
+  },
+  {
+    id: '2',
+    title: '健身计划',
+    priority: 'medium',
+    deadline: '2024-12-31',
+    progress: 45,
+    subgoals: [
+      { id: '2-1', title: '减重5kg', completed: false },
+      { id: '2-2', title: '每周3次训练', completed: true },
+      { id: '2-3', title: '增肌计划', completed: false },
+    ]
+  }
+];
+
+const useGoalStore = create<GoalState>((set, get) => ({
+  goals: [],
+  loading: false,
+  error: null,
+  
+  fetchGoals: async () => {
+    set({ loading: true });
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 500));
+      set({ goals: mockGoals, loading: false });
+    } catch (error) {
+      set({ error: error.message, loading: false });
+    }
+  },
+  
+  addGoal: async (goal) => {
+    set({ loading: true });
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const newGoal: Goal = {
+        ...goal,
+        id: Date.now().toString(),
+        progress: 0,
+        subgoals: []
+      };
+      set(state => ({ 
+        goals: [...state.goals, newGoal],
+        loading: false
+      }));
+    } catch (error) {
+      set({ error: error.message, loading: false });
+    }
+  },
+  
+  // 实现其他方法...
+  updateGoal: async (id, updates) => {
+    // 实现更新功能
+  },
+  
+  deleteGoal: async (id) => {
+    // 实现删除功能
+  },
+  
+  addSubGoal: async (goalId, subgoal) => {
+    // 实现添加子目标功能
+  },
+  
+  toggleSubGoal: async (goalId, subgoalId) => {
+    // 实现切换子目标状态功能
+  }
+}));
+
+export default useGoalStore; 

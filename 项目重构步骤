@@ -1,0 +1,10 @@
+// 1. 初始化React+TypeScript项目（使用create-react-app或Next.js）
+npx create-react-app onething --template typescript
+
+// 2. 安装核心依赖
+npm install @mui/material @emotion/react @emotion/styled
+npm install zustand axios chart.js react-chartjs-2
+npm install @types/node @types/react @types/react-dom
+
+// 3. 安装移动端依赖 
+npm install react-responsive @mui/icons-material 

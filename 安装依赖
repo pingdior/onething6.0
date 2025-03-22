@@ -1,0 +1,13 @@
+cd onething
+
+# 安装MUI相关依赖
+npm install @mui/material @mui/icons-material @emotion/react @emotion/styled
+
+# 安装图表相关依赖
+npm install chart.js react-chartjs-2
+
+# 安装状态管理和路由依赖
+npm install zustand react-router-dom
+
+# 安装其他工具库
+npm install axios date-fns lodash 

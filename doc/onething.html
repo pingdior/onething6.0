@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OneThing 6.0 - AI智能目标管理助手</title>
+    <title>OneThing - AI智能目标管理助手</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         /* 全局样式 */
         :root {
             /* 主色系 */
-            --primary-color: #FFCD00; /* 主黄色 */
-            --secondary-color: #000000; /* 黑色 */
-            --tertiary-color: #7A5C00; /* 深棕色 */
-            --quaternary-color: #9E7600; /* 浅棕色 */
+            --primary-color: #4ECDC4; /* 主色调：柔和的蓝绿色 */
+            --secondary-color: #A6E4D0; /* 辅助色系：浅薄荷绿 */
+            --tertiary-color: #1A535C; /* 辅助色系：中性蓝色 */
+            --accent-color: #FF6B6B; /* 点缀色：温暖的珊瑚色 */
+            
+            /* 中性色 */
+            --light-gray: #F7F9FB;
+            --dark-gray: #2D3748;
             
             /* 文字系统 */
             --heading-font: 'Archivo', sans-serif;
@@ -36,6 +41,9 @@
             --bg-warm: #FFF9F2;
             --card-bg: #FFFFFF;
             --text-dark: #3D3D3D;
+            --radius-lg: 0.5rem;
+            --spacing-md: 1rem;
+            --text-tertiary: #6B7280;
         }
 
         * {
@@ -120,27 +128,49 @@
 
         /* 侧边导航栏 */
         .sidebar {
-            width: 200px;
-            background: linear-gradient(180deg, var(--secondary-color) 0%, var(--tertiary-color) 100%);
+            width: 220px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--tertiary-color) 100%);
             color: var(--white);
-            padding: 1.5rem 0;
+            padding: var(--spacing-md) 0;
+            transition: width var(--transition-normal) ease;
         }
 
         .nav-item {
-            padding: 0.75rem 1.5rem;
+            padding: var(--spacing) var(--spacing-lg); /* 增加左右内边距，使内容更宽敞 */
+            margin-bottom: 8px; /* 增加项目间距，使导航更大气 */
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--spacing); /* 增加图标和文字的间距 */
             cursor: pointer;
+            transition: all var(--transition-fast) ease;
+            border-left: 4px solid transparent; /* 加粗左侧边框 */
+            color: rgba(255, 255, 255, 0.95); /* 大幅提高字体颜色对比度 */
+            font-weight: 600; /* 加粗字体 */
+            letter-spacing: 0.5px; /* 增加字间距 */
         }
 
         .nav-item:hover {
-            background-color: var(--gray-700);
+            background-color: rgba(255, 255, 255, 0.2); /* 增强悬停效果 */
+            color: white;
         }
 
         .nav-item.active {
-            background-color: var(--primary-color);
-            color: var(--secondary-color);
+            background-color: rgba(255, 255, 255, 0.25); /* 增强激活状态背景 */
+            border-left-color: white;
+            color: white;
+            font-weight: 700; /* 进一步加粗高亮时的字体 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加轻微阴影增强视觉效果 */
+        }
+
+        .nav-item svg {
+            width: 22px; /* 稍微放大图标 */
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 1; /* 确保图标完全不透明 */
         }
 
         /* 内容区域 */
@@ -166,22 +196,46 @@
 
         /* 卡片样式 */
         .card {
-            border-radius: 1rem;
-            background-color: var(--card-bg);
-            box-shadow: 0 6px 16px rgba(124, 107, 255, 0.06), 0 1px 3px rgba(124, 107, 255, 0.1);
-            border: 1px solid rgba(124, 107, 255, 0.1);
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            border: none; /* 移除额外边框 */
         }
 
+        /* 主要标题 */
         .card-title {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            color: #594EC5;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: var(--tertiary-color);
+        }
+
+        /* 次要标题 */
+        .goal-title, .section-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* 重要数值 */
+        .stat-value, .goal-percentage, .rate-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* 次要文本 */
+        .task-title, .completed-item {
+            font-size: 0.95rem;
+            font-weight: normal;
+            color: var(--text-secondary);
+        }
+
+        /* 辅助文本 */
+        .task-time, .task-source, .goal-meta {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
         }
 
         /* 按钮样式 */
@@ -262,8 +316,37 @@
 
         .progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary-color) 0%, var(--tertiary-color) 100%);
+            background: linear-gradient(90deg, 
+                var(--secondary-color) 0%, 
+                var(--primary-color) 50%, 
+                var(--tertiary-color) 100%);
             border-radius: 4px;
+            transition: width 1s ease-out;
+            animation: progressPulse 2s infinite alternate;
+        }
+
+        @keyframes progressPulse {
+            0% { opacity: 0.9; }
+            100% { opacity: 1; }
+        }
+
+        /* 达到里程碑时的特殊动画 */
+        .progress-milestone {
+            position: relative;
+        }
+
+        .progress-milestone::after {
+            content: '🎉';
+            position: absolute;
+            top: -20px;
+            right: 0;
+            animation: celebrate 1s ease-out;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* 任务项样式 */
@@ -292,7 +375,7 @@
         }
 
         .task-time {
-            color: var(--gray-500);
+            color: var(--text-tertiary);
             font-size: 0.875rem;
         }
 
@@ -1030,6 +1113,219 @@
         [dir="rtl"] .sidebar {
             right: 0;
         }
+
+        /* 任务完成的动画效果 */
+        .task-checkbox:checked + .task-content .task-title {
+            text-decoration: line-through;
+            color: var(--text-tertiary);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes taskComplete {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .task-checkbox:checked {
+            animation: taskComplete 0.5s ease-out;
+        }
+
+        /* 目标达成时的特效 */
+        .goal-completed {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-completed::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+            animation: shine 1.5s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 复盘页面特定样式 */
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .review-date-range {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--tertiary-color);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .completion-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+            margin: var(--spacing) 0;
+        }
+
+        .chart-container {
+            width: 160px;
+            height: 160px;
+            position: relative;
+        }
+
+        .completion-rate {
+            text-align: center;
+        }
+
+        .rate-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1.2;
+        }
+
+        .rate-label {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .goal-detail-item {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow);
+        }
+
+        .goal-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing);
+        }
+
+        .goal-detail-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--tertiary-color);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .goal-detail-progress {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+        }
+
+        .progress-indicator {
+            font-weight: 600;
+        }
+
+        .progress-indicator.up {
+            color: var(--success);
+        }
+
+        .progress-indicator.down {
+            color: var(--danger);
+        }
+
+        .completed-label {
+            font-weight: 500;
+            margin: var(--spacing) 0 var(--spacing-sm);
+        }
+
+        .completed-items {
+            padding-left: var(--spacing);
+        }
+
+        .completed-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-xs) 0;
+        }
+
+        .completed-item-icon {
+            color: var(--success);
+        }
+
+        .goal-trend {
+            margin-top: var(--spacing-md);
+            height: 160px;
+        }
+
+        .heatmap-container {
+            height: 200px;
+            margin: var(--spacing) 0;
+        }
+
+        .best-time-analysis {
+            margin-top: var(--spacing);
+        }
+
+        .section-title {
+            font-weight: 500;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .best-time-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+
+        .time-slot {
+            background-color: var(--light-gray);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            color: var(--tertiary-color);
+            font-size: 0.9rem;
+        }
+
+        /* 设置页特定样式 */
+        .settings-option input[type="checkbox"],
+        .settings-option input[type="radio"] {
+            accent-color: var(--primary-color); /* 使用主色调 */
+        }
+
+        .theme-preview.active {
+            border-color: var(--primary-color);
+        }
+
+        .theme-option input[type="radio"]:checked + .theme-preview {
+            border: 2px solid var(--primary-color);
+        }
+
+        .workday-btn {
+            background-color: transparent;
+            border: 1px solid var(--light-gray);
+            padding: var(--spacing-xs) var(--spacing-sm);
+        }
+
+        .workday-btn.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -1087,56 +1383,35 @@
             <!-- 侧边导航栏 -->
             <nav class="sidebar">
                 <div class="nav-item" onclick="changePage('dashboard')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                     <span>仪表盘</span>
                 </div>
                 <div class="nav-item" onclick="changePage('goals')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     <span>目标</span>
                 </div>
                 <div class="nav-item" onclick="changePage('tasks')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     <span>任务</span>
                 </div>
                 <div class="nav-item" onclick="changePage('emotions')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                        <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                        <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
                     <span>情绪</span>
                 </div>
+                <div class="nav-item" onclick="changePage('review')">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>复盘</span>
+                </div>
                 <div class="nav-item" onclick="changePage('companion')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    <span>AI伴侣</span>
+                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>AI伙伴</span>
                 </div>
                 <div class="nav-item" onclick="changePage('settings')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     <span>设置</span>
                 </div>
                 <div class="nav-item" onclick="changePage('help')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                     <span>帮助</span>
                 </div>
             </nav>
@@ -1150,80 +1425,57 @@
                         <div class="card">
                             <div class="card-title">
                                 <span>今日概览</span>
-                                <span>2024-03-19</span>
+                                <span class="date">2024-03-19</span>
                             </div>
-                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                                <div style="flex: 1; padding: 1rem; background-color: var(--gray-100); border-radius: 0.5rem; text-align: center;">
-                                    <div class="text-sm text-gray">待完成任务</div>
-                                    <div class="font-bold">5/8</div>
+                            <div class="overview-stats">
+                                <div class="stat-box">
+                                    <div class="stat-label">待完成任务</div>
+                                    <div class="stat-value">5/8</div>
                                 </div>
-                                <div style="flex: 1; padding: 1rem; background-color: var(--gray-100); border-radius: 0.5rem; text-align: center;">
-                                    <div class="text-sm text-gray">目标进度</div>
-                                    <div class="font-bold">68%</div>
+                                <div class="stat-box">
+                                    <div class="stat-label">目标进度</div>
+                                    <div class="stat-value">68%</div>
                                 </div>
-                                <div style="flex: 1; padding: 1rem; background-color: var(--gray-100); border-radius: 0.5rem; text-align: center;">
-                                    <div class="text-sm text-gray">情绪状态</div>
-                                    <div class="font-bold">😊</div>
+                                <div class="stat-box">
+                                    <div class="stat-label">情绪状态</div>
+                                    <div class="stat-value">😊</div>
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="card">
                             <div class="card-title">
                                 <span>今日待办</span>
                                 <button class="btn btn-sm btn-secondary">排序</button>
                             </div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox">
-                                <div class="task-content">
-                                    <div class="task-time">9:00</div>
-                                    <div class="task-title">完成项目提案初稿</div>
+                            <div class="task-list">
+                                <div class="task-item">
+                                    <input type="checkbox" class="task-checkbox">
+                                    <div class="task-content">
+                                        <div class="task-time">9:00</div>
+                                        <div class="task-title">完成项目提案初稿</div>
+                                        <div class="task-source">🎯 来自：项目管理</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox">
-                                <div class="task-content">
-                                    <div class="task-time">11:00</div>
-                                    <div class="task-title">团队周会</div>
-                                </div>
-                            </div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox" checked>
-                                <div class="task-content">
-                                    <div class="task-time">13:00</div>
-                                    <div class="task-title">回复重要邮件</div>
-                                </div>
-                            </div>
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox">
-                                <div class="task-content">
-                                    <div class="task-time">15:00</div>
-                                    <div class="task-title">健身</div>
-                                </div>
+                                <!-- 更多任务项... -->
                             </div>
                         </div>
+                        
                         <div class="card">
                             <div class="card-title">
                                 <span>目标进展</span>
-                                <a href="#" class="text-sm" onclick="changePage('goals')">查看全部 ></a>
+                                <a href="#" class="view-all">查看全部 ></a>
                             </div>
-                            <div style="margin-bottom: 1rem;">
-                                <div class="flex justify-between items-center">
-                                    <div>项目管理认证</div>
-                                    <div>68%</div>
+                            <div class="goal-progress-item">
+                                <div class="goal-info">
+                                    <div class="goal-name">PMP认证</div>
+                                    <div class="goal-percentage">68%</div>
                                 </div>
                                 <div class="progress-bar">
                                     <div class="progress-bar-fill" style="width: 68%;"></div>
                                 </div>
                             </div>
-                            <div>
-                                <div class="flex justify-between items-center">
-                                    <div>健身计划</div>
-                                    <div>45%</div>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-bar-fill" style="width: 45%;"></div>
-                                </div>
-                            </div>
+                            <!-- 更多目标进展项... -->
                         </div>
                     </div>
 
@@ -1232,45 +1484,41 @@
                         <div class="card">
                             <div class="card-title">
                                 <span>目标管理</span>
-                                <button class="btn btn-primary btn-sm">+ 开始新目标对话</button>
+                                <button class="btn btn-primary btn-sm">+ 新目标</button>
                             </div>
-                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                                <div style="flex: 1; padding: 0.5rem; background-color: var(--gray-100); border-radius: 0.5rem;">
-                                    <div class="text-sm font-bold">目标分类</div>
-                                    <div style="margin-top: 0.5rem;">
-                                        <label><input type="radio" name="goal-filter" checked> 所有目标</label><br>
-                                        <label><input type="radio" name="goal-filter"> 进行中</label><br>
+                            <div class="filter-controls">
+                                <div class="filter-group">
+                                    <div class="filter-title">分类</div>
+                                    <div class="filter-options">
+                                        <label><input type="radio" name="goal-filter" checked> 所有目标</label>
+                                        <label><input type="radio" name="goal-filter"> 进行中</label>
                                         <label><input type="radio" name="goal-filter"> 已完成</label>
                                     </div>
                                 </div>
-                                <div style="flex: 1; padding: 0.5rem; background-color: var(--gray-100); border-radius: 0.5rem;">
-                                    <div class="text-sm font-bold">排序方式</div>
-                                    <div style="margin-top: 0.5rem;">
-                                        <label><input type="radio" name="goal-sort" checked> 优先级</label><br>
-                                        <label><input type="radio" name="goal-sort"> 截止日期</label><br>
+                                <div class="filter-group">
+                                    <div class="filter-title">排序</div>
+                                    <div class="filter-options">
+                                        <label><input type="radio" name="goal-sort" checked> 优先级</label>
+                                        <label><input type="radio" name="goal-sort"> 截止日期</label>
                                         <label><input type="radio" name="goal-sort"> 完成度</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
-                            <div>🎯 项目管理认证 PMP</div>
-                            <div class="text-sm text-gray">优先级：高  截止日期：2024-06-30  完成度：68%</div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill" style="width: 68%;"></div>
+                        
+                        <div class="goal-card">
+                            <div class="goal-icon">🎯</div>
+                            <div class="goal-content">
+                                <div class="goal-title">PMP认证</div>
+                                <div class="goal-meta">优先级：高 | 截止日期：2024-06-30 | 完成度：68%</div>
+                                <div class="progress-bar">
+                                    <div class="progress-bar-fill" style="width: 68%;"></div>
+                                </div>
+                                <div class="goal-subgoals">子目标：4/6 已完成</div>
+                                <button class="btn btn-sm btn-secondary goal-details-btn">查看详情 ▼</button>
                             </div>
-                            <div class="text-sm">子目标：4/6 已完成</div>
-                            <button class="btn btn-sm btn-secondary mt-2">查看详情 ▼</button>
                         </div>
-                        <div class="card">
-                            <div>💪 健身计划</div>
-                            <div class="text-sm text-gray">优先级：中  截止日期：2024-12-31  完成度：45%</div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill" style="width: 45%;"></div>
-                            </div>
-                            <div class="text-sm">子目标：2/5 已完成</div>
-                            <button class="btn btn-sm btn-secondary mt-2">查看详情 ▼</button>
-                        </div>
+                        <!-- 更多目标卡片... -->
                     </div>
 
                     <!-- 任务页面 -->
@@ -1400,7 +1648,7 @@
                         </div>
                     </div>
 
-                    <!-- AI伴侣页面 -->
+                    <!-- AI伙伴页面 -->
                     <div id="companion-page" class="page">
                         <div class="card">
                             <div class="card-title">伙伴状态</div>
@@ -1456,28 +1704,14 @@
                             <div class="card-title">工作习惯设置</div>
                             <div class="form-group">
                                 <div class="form-label">工作日</div>
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox" checked> 周一
-                                    </label>
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox" checked> 周二
-                                    </label>
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox" checked> 周三
-                                    </label>
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox" checked> 周四
-                                    </label>
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox" checked> 周五
-                                    </label>
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox" checked> 周六
-                                    </label>
-                                    <label style="flex: 0 0 auto; padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 0.25rem;">
-                                        <input type="checkbox"> 周日
-                                    </label>
+                                <div class="workday-selection">
+                                    <button class="workday-btn selected">周一</button>
+                                    <button class="workday-btn selected">周二</button>
+                                    <button class="workday-btn selected">周三</button>
+                                    <button class="workday-btn selected">周四</button>
+                                    <button class="workday-btn selected">周五</button>
+                                    <button class="workday-btn selected">周六</button>
+                                    <button class="workday-btn">周日</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1617,26 +1851,136 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 复盘页面 -->
+                    <div id="review-page" class="page">
+                        <div class="review-header">
+                            <div class="review-date-range">2024.3.13-3.19</div>
+                            <div class="period-selector">
+                                <button class="btn btn-sm btn-primary active">周</button>
+                                <button class="btn btn-sm btn-secondary">月</button>
+                                <button class="btn btn-sm btn-secondary">自定义</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-title">本周目标概览</div>
+                            <div class="review-overview">
+                                <div class="completion-chart">
+                                    <div class="chart-container">
+                                        <canvas id="completionChart"></canvas>
+                                    </div>
+                                    <div class="completion-rate">
+                                        <div class="rate-number">85%</div>
+                                        <div class="rate-label">完成率</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-title">目标进展详情</div>
+                            
+                            <div class="goal-detail-item">
+                                <div class="goal-detail-header">
+                                    <div class="goal-detail-title">
+                                        <span class="goal-icon">🎯</span>
+                                        <span>PMP认证</span>
+                                    </div>
+                                    <div class="goal-detail-progress">
+                                        <div class="progress-text">本周进度：+15%</div>
+                                        <div class="progress-indicator up">↑</div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-bar-fill" style="width: 68%;"></div>
+                                </div>
+                                <div class="goal-detail-content">
+                                    <div class="completed-label">本周完成：</div>
+                                    <div class="completed-items">
+                                        <div class="completed-item">
+                                            <span class="completed-item-icon">✓</span>
+                                            <span>PMBOK第4章</span>
+                                        </div>
+                                        <div class="completed-item">
+                                            <span class="completed-item-icon">✓</span>
+                                            <span>50道练习题</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="goal-trend">
+                                    <canvas id="pmpTrendChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="goal-detail-item">
+                                <div class="goal-detail-header">
+                                    <div class="goal-detail-title">
+                                        <span class="goal-icon">💪</span>
+                                        <span>健身计划</span>
+                                    </div>
+                                    <div class="goal-detail-progress">
+                                        <div class="progress-text">本周进度：+5%</div>
+                                        <div class="progress-indicator up">↑</div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-bar-fill" style="width: 45%;"></div>
+                                </div>
+                                <div class="goal-detail-content">
+                                    <div class="completed-label">本周完成：</div>
+                                    <div class="completed-items">
+                                        <div class="completed-item">
+                                            <span class="completed-item-icon">✓</span>
+                                            <span>3次训练</span>
+                                        </div>
+                                        <div class="completed-item">
+                                            <span class="completed-item-icon">✓</span>
+                                            <span>体重-0.5kg</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="goal-trend">
+                                    <canvas id="fitnessProgressChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-title">时间投入分析</div>
+                            <div class="heatmap-container">
+                                <canvas id="timeHeatmapChart"></canvas>
+                            </div>
+                            <div class="best-time-analysis">
+                                <div class="section-title">最佳工作时间：</div>
+                                <div class="best-time-slots">
+                                    <div class="time-slot">14:00-16:00</div>
+                                    <div class="time-slot">9:00-11:00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 聊天侧边栏 -->
                 <div class="chat-sidebar">
                     <div class="chat-container">
                         <div class="chat-header">
-                            <span>🤖 AI伴侣</span>
+                            <span>🤖 AI伙伴</span>
+                            <span class="ai-level">Lv.3</span>
                         </div>
                         <div class="chat-messages">
                             <div class="chat-message message-ai">
-                                早上好！今天安排了5个任务，我来帮你规划一下时间。
+                                本周的目标完成情况不错！特别是PMP认证的学习非常稳定。
                             </div>
                             <div class="chat-message message-ai">
-                                最重要的是9:00的项目提案，建议你优先完成它。
+                                我发现你在下午的学习效率更高，建议调整一下时间安排。
                             </div>
                             <div class="chat-message message-user">
-                                谢谢提醒，我会先完成提案的。
+                                谢谢提醒，我会考虑调整学习时间。
                             </div>
                             <div class="chat-message message-ai">
-                                很好！需要我详细说明某个任务吗？
+                                要听听详细的分析吗？
                             </div>
                         </div>
                         <div class="chat-input">
@@ -1663,22 +2007,39 @@ function changePage(pageName) {
         page.classList.remove('active');
     });
     
-    // 更新导航栏选中状态
+    // 移除所有导航项的活动状态
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
     
     // 显示选中的页面
-    document.getElementById(pageName + '-page').classList.add('active');
+    const targetPage = document.getElementById(pageName + '-page');
+    if (targetPage) {
+        targetPage.classList.add('active');
+    } else {
+        console.error('页面不存在:', pageName + '-page');
+        // 默认显示仪表盘
+        document.getElementById('dashboard-page').classList.add('active');
+        pageName = 'dashboard';
+    }
     
     // 选中对应的导航项
+    const navItemMap = {
+        'dashboard': '仪表盘',
+        'goals': '目标',
+        'tasks': '任务',
+        'emotions': '情绪',
+        'review': '复盘',
+        'companion': 'AI伙伴',
+        'settings': '设置',
+        'help': '帮助'
+    };
+    
+    const navText = navItemMap[pageName] || '';
+    
     document.querySelectorAll('.nav-item').forEach(item => {
-        if(item.textContent.trim().includes(pageName === 'dashboard' ? '仪表盘' : 
-            pageName === 'goals' ? '目标' :
-            pageName === 'tasks' ? '任务' :
-            pageName === 'emotions' ? '情绪' :
-            pageName === 'companion' ? 'AI伴侣' :
-            pageName === 'settings' ? '设置' : '帮助')) {
+        const itemText = item.querySelector('span').textContent.trim();
+        if (itemText === navText) {
             item.classList.add('active');
         }
     });
@@ -1830,7 +2191,7 @@ const translations = {
         goals: "目标",
         tasks: "任务",
         emotions: "情绪",
-        ai_companion: "AI伴侣",
+        ai_companion: "AI伙伴", // 修改术语
         settings: "设置",
         help: "帮助",
         // ... 更多翻译项
@@ -1866,6 +2227,267 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('language-select').value = savedLang;
     changeLanguage(savedLang);
 });
+
+// 根据时间调整界面颜色
+function adjustThemeByTime() {
+    const hour = new Date().getHours();
+    const root = document.documentElement;
+    
+    if (hour >= 5 && hour < 12) {
+        // 早晨：明亮、清新的颜色
+        root.style.setProperty('--primary-color', '#4ECDC4');
+        root.style.setProperty('--secondary-color', '#A6E4D0');
+        root.classList.remove('afternoon-theme', 'evening-theme');
+        root.classList.add('morning-theme');
+    } else if (hour >= 12 && hour < 18) {
+        // 下午：温暖、有活力的颜色
+        root.style.setProperty('--primary-color', '#4E9CDC');
+        root.style.setProperty('--secondary-color', '#A6C4E4');
+        root.classList.remove('morning-theme', 'evening-theme');
+        root.classList.add('afternoon-theme');
+    } else {
+        // 晚上：柔和、放松的颜色
+        root.style.setProperty('--primary-color', '#7C4ECD');
+        root.style.setProperty('--secondary-color', '#C4A6E4');
+        root.classList.remove('morning-theme', 'afternoon-theme');
+        root.classList.add('evening-theme');
+    }
+}
+
+// 根据情绪状态调整色彩饱和度
+function adjustThemeByEmotion(emotion) {
+    const root = document.documentElement;
+    
+    switch(emotion) {
+        case 'happy':
+            root.style.setProperty('--saturation', '100%');
+            root.classList.remove('neutral-theme', 'sad-theme');
+            root.classList.add('happy-theme');
+            break;
+        case 'neutral':
+            root.style.setProperty('--saturation', '80%');
+            root.classList.remove('happy-theme', 'sad-theme');
+            root.classList.add('neutral-theme');
+            break;
+        case 'sad':
+            root.style.setProperty('--saturation', '60%');
+            root.classList.remove('happy-theme', 'neutral-theme');
+            root.classList.add('sad-theme');
+            break;
+    }
+    
+    // 应用饱和度调整到所有相关元素
+    document.querySelectorAll('.adjust-saturation').forEach(el => {
+        el.style.filter = `saturate(var(--saturation))`;
+    });
+}
+
+// 页面加载和情绪记录时调用这些函数
+document.addEventListener('DOMContentLoaded', adjustThemeByTime);
+// 每小时更新一次
+setInterval(adjustThemeByTime, 3600000);
+
+// 在文档加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置默认语言为中文
+    document.getElementById('language-select').value = 'zh';
+    changeLanguage('zh');
+    
+    // 初始化其他功能
+    initCharts();
+    adjustThemeByTime();
+    
+    // 确保默认页面的导航高亮
+    const currentPage = document.querySelector('.page.active');
+    if (currentPage) {
+        const pageId = currentPage.id.replace('-page', '');
+        changePage(pageId);
+    } else {
+        changePage('dashboard'); // 默认显示仪表盘
+    }
+});
+
+// 在文档加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化复盘页面的所有图表
+    if (document.getElementById('completionChart')) {
+        initReviewCharts();
+    }
+});
+
+// 初始化复盘页面图表
+function initReviewCharts() {
+    // 完成率环形图
+    const completionCtx = document.getElementById('completionChart').getContext('2d');
+    new Chart(completionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['已完成', '未完成'],
+            datasets: [{
+                data: [85, 15],
+                backgroundColor: [
+                    'var(--primary-color)',
+                    'var(--gray-200)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            cutout: '75%',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // PMP趋势图
+    if (document.getElementById('pmpTrendChart')) {
+        const pmpTrendCtx = document.getElementById('pmpTrendChart').getContext('2d');
+        new Chart(pmpTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['3/13', '3/14', '3/15', '3/16', '3/17', '3/18', '3/19'],
+                datasets: [{
+                    label: '完成率',
+                    data: [53, 53, 58, 58, 63, 63, 68],
+                    borderColor: 'var(--primary-color)',
+                    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        max: 70
+                    }
+                }
+            }
+        });
+    }
+    
+    // 健身趋势图
+    if (document.getElementById('fitnessProgressChart')) {
+        const fitnessCtx = document.getElementById('fitnessProgressChart').getContext('2d');
+        new Chart(fitnessCtx, {
+            type: 'line',
+            data: {
+                labels: ['3/13', '3/14', '3/15', '3/16', '3/17', '3/18', '3/19'],
+                datasets: [{
+                    label: '完成率',
+                    data: [35, 35, 40, 40, 40, 45, 45],
+                    borderColor: 'var(--accent-color)',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 30,
+                        max: 50
+                    }
+                }
+            }
+        });
+    }
+    
+    // 时间热力图
+    if (document.getElementById('timeHeatmapChart')) {
+        const heatmapCtx = document.getElementById('timeHeatmapChart').getContext('2d');
+        const dummyData = Array(7).fill(0).map(() => 
+            Array(24).fill(0).map(() => 
+                Math.floor(Math.random() * 100)
+            )
+        );
+        
+        new Chart(heatmapCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: '工作效率',
+                    data: dummyData.flatMap((dayData, day) => 
+                        dayData.map((value, hour) => ({
+                            x: hour,
+                            y: day,
+                            v: value
+                        }))
+                    ),
+                    backgroundColor: function(context) {
+                        const value = context.raw.v;
+                        const alpha = value / 100;
+                        return `rgba(78, 205, 196, ${alpha})`;
+                    },
+                    pointRadius: 15,
+                    pointHoverRadius: 18
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        min: 0,
+                        max: 23,
+                        title: {
+                            display: true,
+                            text: '小时'
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 6,
+                        reverse: false,
+                        title: {
+                            display: true,
+                            text: '星期'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][value];
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const data = context.raw;
+                                return `效率: ${data.v}%`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+}
 </script>
 
 </body>

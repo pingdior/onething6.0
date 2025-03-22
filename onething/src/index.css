@@ -1,12 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 保留Tailwind工具类 */
+
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* 全局样式 */
 :root {
   /* 主色系 */
-  --primary-color: #FFCD00; /* 主黄色 */
-  --secondary-color: #000000; /* 黑色 */
-  --tertiary-color: #7A5C00; /* 深棕色 */
-  --quaternary-color: #9E7600; /* 浅棕色 */
+  --primary-color: #4ECDC4; /* 主色调：柔和的蓝绿色 */
+  --secondary-color: #A6E4D0; /* 辅助色系：浅薄荷绿 */
+  --tertiary-color: #1A535C; /* 辅助色系：中性蓝色 */
+  --accent-color: #FF6B6B; /* 点缀色：温暖的珊瑚色 */
+  
+  /* 中性色 */
+  --light-gray: #F7F9FB;
+  --dark-gray: #2D3748;
   
   /* 文字系统 */
   --heading-font: 'Archivo', sans-serif;
@@ -24,8 +34,16 @@
   --gray-800: #1F2937;
   --gray-900: #111827;
   --white: #FFFFFF;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --bg-warm: #FFF9F2;
+  --card-bg: #FFFFFF;
   --text-dark: #3D3D3D;
+  --radius-lg: 0.5rem;
+  --spacing-md: 1rem;
+  --text-tertiary: #6B7280;
 }
 
 body {
@@ -39,25 +57,25 @@ body {
 
 /* 基本卡片样式 */
 .card {
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   background-color: var(--white);
-  box-shadow: 0 6px 16px rgba(124, 107, 255, 0.06), 0 1px 3px rgba(124, 107, 255, 0.1);
-  border: 1px solid rgba(124, 107, 255, 0.1);
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border: none;
 }
 
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #594EC5;
-  margin-bottom: 1rem;
+  color: var(--tertiary-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
-/* 基本按钮样式 */
+/* 按钮样式 */
 .btn {
   padding: 0.5rem 1rem;
   border-radius: 0.75rem;
@@ -73,7 +91,7 @@ body {
 
 .btn-primary {
   background-color: var(--primary-color);
-  color: var(--secondary-color);
+  color: white;
 }
 
 .btn-secondary {
@@ -103,10 +121,11 @@ body {
 
 /* 侧边栏样式 */
 .sidebar {
-  width: 200px;
-  background: linear-gradient(180deg, var(--secondary-color) 0%, var(--tertiary-color) 100%);
+  width: 220px;
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--tertiary-color) 100%);
   color: var(--white);
-  padding: 1.5rem 0;
+  padding: var(--spacing-md) 0;
+  transition: width 0.3s ease;
 }
 
 /* 内容区域 */
@@ -149,7 +168,7 @@ body {
 }
 
 .task-time {
-  color: var(--gray-500);
+  color: var(--text-tertiary);
   font-size: 0.875rem;
 }
 
@@ -162,13 +181,13 @@ body {
   color: var(--gray-500);
 }
 
-/* 布局样式 */
 .main-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
+  background-color: var(--gray-100);
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
@@ -189,28 +208,91 @@ body {
   }
 }
 
-/* 聊天侧边栏 */
 .chat-sidebar {
   width: 320px;
   border-left: 1px solid var(--gray-200);
+  background-color: var(--white);
   display: flex;
   flex-direction: column;
 }
 
-/* 聊天输入指示器 */
+/* 情绪中心页面样式 */
+.emotion-trend {
+  width: 100%;
+  height: 250px;
+  background-color: var(--gray-100);
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.emotion-distribution {
+  width: 100%;
+  height: 180px;
+  background-color: var(--gray-100);
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.emotion-journal-item {
+  padding: 1rem;
+  background-color: var(--white);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.journal-date {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.journal-content {
+  color: var(--gray-700);
+}
+
+/* 辅助类 */
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-gray {
+  color: var(--gray-500);
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+/* 打字指示器动画 */
 .typing-indicator {
   display: flex;
-  gap: 4px;
-  justify-content: center;
   align-items: center;
-  height: 20px;
+  gap: 4px;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .typing-indicator span {
-  display: block;
+  display: inline-block;
   width: 8px;
   height: 8px;
-  background-color: var(--gray-500);
+  background-color: var(--gray-400);
   border-radius: 50%;
   animation: typing 1.5s infinite ease-in-out;
 }
@@ -228,18 +310,10 @@ body {
 }
 
 @keyframes typing {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
+  0%, 60%, 100% {
+    transform: translateY(0);
   }
-  
-  50% {
-    transform: scale(1.5);
-    opacity: 1;
-  }
-  
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
+  30% {
+    transform: translateY(-4px);
   }
 }

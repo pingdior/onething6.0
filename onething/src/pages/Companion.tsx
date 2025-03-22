@@ -26,7 +26,9 @@ const Companion: React.FC = () => {
   
   // 处理任务创建
   const handleCreateTask = (taskTitle: string) => {
-    addTask({
+    console.log('创建任务:', taskTitle); // 添加日志
+    
+    const newTaskId = addTask({
       title: taskTitle,
       time: `${new Date().getHours()}:00-${new Date().getHours() + 1}:00`,
       completed: false,
@@ -36,6 +38,8 @@ const Companion: React.FC = () => {
       },
       priority: 'medium'
     });
+    
+    console.log('任务已创建，ID:', newTaskId); // 添加任务创建成功日志
   };
   
   return (
