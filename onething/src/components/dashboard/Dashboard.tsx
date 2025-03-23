@@ -5,23 +5,29 @@ import {
 } from '@mui/material';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
+import GoalProgressChart from '../goals/GoalProgressChart';
+import TimeHeatmapChart from '../review/TimeHeatmapChart';
 
-interface StatsCardProps {
+// 统计卡片组件
+const StatsCard: React.FC<{
   title: string;
   value: string | number;
   subtext?: string;
   icon?: React.ReactNode;
-}
-
-const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtext, icon }) => (
-  <Card elevation={0} sx={{ height: '100%', bgcolor: 'background.default' }}>
+}> = ({ title, value, subtext, icon }) => (
+  <Card elevation={0} sx={{ 
+    height: '100%', 
+    bgcolor: 'background.default',
+    border: '1px solid #eaeaea',
+    borderRadius: '8px'
+  }}>
     <CardContent>
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box>
           <Typography color="text.secondary" variant="body2" gutterBottom>
             {title}
           </Typography>
-          <Typography variant="h5" component="div" sx={{ mb: 0.5 }}>
+          <Typography variant="h5" component="div" sx={{ mb: 0.5, fontWeight: 600 }}>
             {value}
           </Typography>
           {subtext && (
@@ -39,6 +45,41 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtext, icon }) =>
     </CardContent>
   </Card>
 );
+
+// 主要指标UI组件
+const LinearProgressWithLabel: React.FC<{ value: number }> = ({ value }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+    <Box sx={{ width: '100%', mr: 1 }}>
+      <LinearProgress 
+        variant="determinate" 
+        value={value} 
+        sx={{ 
+          height: 8, 
+          borderRadius: 4,
+          backgroundColor: '#e0e0e0',
+          '& .MuiLinearProgress-bar': {
+            backgroundColor: '#4ECDC4'
+          }
+        }}
+      />
+    </Box>
+    <Box sx={{ minWidth: 35 }}>
+      <Typography variant="body2" color="text.secondary">
+        {`${Math.round(value)}%`}
+      </Typography>
+    </Box>
+  </Box>
+);
+
+// 格式化日期
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('zh-CN', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
 
 const Dashboard: React.FC = () => {
   const goals = useGoalStore(state => state.goals);
@@ -65,21 +106,48 @@ const Dashboard: React.FC = () => {
     // 获取优先级最高的目标
     const highPriorityGoals = goals.filter(goal => goal.priority === 'high');
     if (highPriorityGoals.length > 0) {
-      // 选择完成率最低的高优先级目标
       const lowestCompletionGoal = highPriorityGoals.reduce(
         (prev, current) => (prev.completionRate < current.completionRate) ? prev : current
       );
       setPriorityGoal(lowestCompletionGoal);
     } else if (goals.length > 0) {
-      // 如果没有高优先级目标，则选择第一个目标
       setPriorityGoal(goals[0]);
     }
   }, [goals, tasks]);
   
+  // 替换目标展示部分
+  const highPriorityGoal = goals.find(goal => goal.priority === 'high') || goals[0];
+  
+  // 生成模拟数据
+  const generateHeatmapData = () => {
+    const data = [];
+    // 为每天的每个工作时间段生成数据
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 8; hour < 22; hour++) {
+        // 工作效率在0-10之间随机，但在特定时间段效率会更高
+        let efficiency = Math.random() * 10;
+        // 上午9-11点和下午14-16点效率更高
+        if ((hour >= 9 && hour < 11) || (hour >= 14 && hour < 16)) {
+          efficiency = 5 + Math.random() * 5; // 5-10之间
+        }
+        // 周末效率略低
+        if (day > 4) {
+          efficiency *= 0.8;
+        }
+        data.push({
+          day,
+          hour,
+          efficiency: Math.round(efficiency * 10) / 10
+        });
+      }
+    }
+    return data;
+  };
+  
   return (
-    <Box sx={{ py: 3 }}>
-      <Grid container spacing={3}>
-        {/* 统计卡片区域 */}
+    <Box>
+      {/* 统计卡片区域 */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
           <StatsCard
             title="整体目标完成率"
@@ -91,6 +159,12 @@ const Dashboard: React.FC = () => {
                   variant="determinate"
                   value={completionRate}
                   size={40}
+                  sx={{
+                    color: '#4ECDC4',
+                    '& .MuiCircularProgress-circle': {
+                      strokeLinecap: 'round',
+                    },
+                  }}
                 />
                 <Box
                   top={0}
@@ -134,197 +208,47 @@ const Dashboard: React.FC = () => {
             }
           />
         </Grid>
-        
+      </Grid>
+      
+      {/* 详细信息区域 */}
+      <Grid container spacing={3}>
         {/* 优先目标区域 */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: 2, borderRadius: '8px', height: '100%' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               优先目标
             </Typography>
-            {priorityGoal ? (
-              <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h5" component="span" sx={{ mr: 2 }}>
-                    {priorityGoal.icon || '🎯'} {priorityGoal.title}
-                  </Typography>
-                  <Box 
-                    sx={{ 
-                      backgroundColor: 
-                        priorityGoal.priority === 'high' ? 'error.light' : 
-                        priorityGoal.priority === 'medium' ? 'warning.light' : 'info.light',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      fontSize: '0.75rem'
-                    }}
-                  >
-                    {priorityGoal.priority === 'high' ? '高' : 
-                     priorityGoal.priority === 'medium' ? '中' : '低'}优先级
-                  </Box>
-                </Box>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box sx={{ width: '100%', mr: 1 }}>
-                    <LinearProgressWithLabel value={priorityGoal.completionRate} />
-                  </Box>
-                </Box>
-                
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  截止日期: {formatDate(priorityGoal.deadline)}
-                </Typography>
-                
-                {priorityGoal.subGoals && priorityGoal.subGoals.length > 0 && (
-                  <Box>
-                    <Typography variant="subtitle2" gutterBottom>
-                      子目标进展
-                    </Typography>
-                    <List dense>
-                      {priorityGoal.subGoals.slice(0, 4).map((subGoal: any) => (
-                        <ListItem key={subGoal.id} disablePadding sx={{ py: 0.5 }}>
-                          <ListItemText
-                            primary={
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                  textDecoration: subGoal.completed ? 'line-through' : 'none',
-                                  color: subGoal.completed ? 'text.disabled' : 'text.primary',
-                                  display: 'flex',
-                                  alignItems: 'center'
-                                }}
-                              >
-                                {subGoal.completed ? '✓' : '○'} {subGoal.title}
-                              </Typography>
-                            }
-                          />
-                        </ListItem>
-                      ))}
-                      {priorityGoal.subGoals.length > 4 && (
-                        <ListItem disablePadding sx={{ py: 0.5 }}>
-                          <ListItemText
-                            primary={
-                              <Typography 
-                                variant="body2" 
-                                color="primary"
-                              >
-                                查看全部 {priorityGoal.subGoals.length} 个子目标...
-                              </Typography>
-                            }
-                          />
-                        </ListItem>
-                      )}
-                    </List>
-                  </Box>
-                )}
-              </Box>
-            ) : (
-              <Typography color="text.secondary">
-                没有设置目标，点击"目标"页面添加新目标
-              </Typography>
-            )}
+            <Divider sx={{ my: 1 }} />
+            <GoalProgressChart 
+              goal={highPriorityGoal} 
+              showDetails={true}
+              height={220}
+              milestones={[
+                { value: 25, label: '初步规划' },
+                { value: 50, label: '半程检查点' },
+                { value: 75, label: '最终冲刺' },
+                { value: 100, label: '目标完成' },
+              ]}
+            />
           </Paper>
         </Grid>
         
         {/* 时间效率分析 */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: 2, borderRadius: '8px', height: '100%' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               时间效率分析
             </Typography>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                最佳工作时段
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Box sx={{ 
-                  bgcolor: 'success.light', 
-                  color: 'success.contrastText',
-                  p: 1,
-                  borderRadius: 1,
-                  width: '30%',
-                  textAlign: 'center'
-                }}>
-                  <Typography variant="body2">上午 9:00-11:00</Typography>
-                </Box>
-                <Box sx={{ 
-                  bgcolor: 'primary.light', 
-                  color: 'primary.contrastText',
-                  p: 1,
-                  borderRadius: 1,
-                  width: '30%',
-                  textAlign: 'center'
-                }}>
-                  <Typography variant="body2">下午 14:00-16:00</Typography>
-                </Box>
-                <Box sx={{ 
-                  bgcolor: 'secondary.light', 
-                  color: 'secondary.contrastText',
-                  p: 1,
-                  borderRadius: 1,
-                  width: '30%',
-                  textAlign: 'center'
-                }}>
-                  <Typography variant="body2">晚上 20:00-22:00</Typography>
-                </Box>
-              </Box>
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                本周专注度
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 100 }}>周一</Typography>
-                  <LinearProgressWithLabel value={85} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 100 }}>周二</Typography>
-                  <LinearProgressWithLabel value={75} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 100 }}>周三</Typography>
-                  <LinearProgressWithLabel value={92} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 100 }}>周四</Typography>
-                  <LinearProgressWithLabel value={68} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 100 }}>周五</Typography>
-                  <LinearProgressWithLabel value={88} />
-                </Box>
-              </Box>
-            </Box>
+            <Divider sx={{ my: 1 }} />
+            <TimeHeatmapChart 
+              data={generateHeatmapData()} 
+              height={250}
+            />
           </Paper>
         </Grid>
       </Grid>
     </Box>
   );
 };
-
-function LinearProgressWithLabel(props: { value: number }) {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-      <Box sx={{ width: '100%', mr: 1 }}>
-        <LinearProgress variant="determinate" value={props.value} sx={{ height: 8, borderRadius: 5 }} />
-      </Box>
-      <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="text.secondary">{`${Math.round(props.value)}%`}</Typography>
-      </Box>
-    </Box>
-  );
-}
-
-// 辅助函数：格式化日期
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('zh-CN', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  }).format(date);
-}
 
 export default Dashboard; 

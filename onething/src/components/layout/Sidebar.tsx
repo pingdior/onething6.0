@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Box } from '@mui/material';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -12,8 +13,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -34,8 +35,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -54,8 +55,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -76,8 +77,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -99,8 +100,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -121,8 +122,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -140,8 +141,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -160,8 +161,8 @@ const Sidebar: React.FC = () => {
       icon: (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="18" 
-          height="18" 
+          width="22" 
+          height="22" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -178,22 +179,43 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <nav className="w-50 bg-gradient-to-b from-secondary to-tertiary text-white py-6">
+    <Box sx={{
+      width: '50px',
+      minHeight: '100vh',
+      backgroundColor: '#fff',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      py: 2,
+      boxShadow: '1px 0 5px rgba(0,0,0,0.05)'
+    }}>
       {menuItems.map((item, index) => (
-        <div 
+        <Box 
           key={index}
-          className={`py-3 px-6 flex items-center gap-2 cursor-pointer ${
-            location.pathname === item.path 
-              ? 'bg-primary text-secondary' 
-              : 'hover:bg-gray-700'
-          }`}
+          sx={{
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '8px',
+            mb: 1.5,
+            color: location.pathname === item.path ? '#4ECDC4' : '#6B7280',
+            backgroundColor: location.pathname === item.path ? 'rgba(78, 205, 196, 0.1)' : 'transparent',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            '&:hover': {
+              backgroundColor: 'rgba(78, 205, 196, 0.05)',
+              color: location.pathname === item.path ? '#4ECDC4' : '#4B5563'
+            }
+          }}
           onClick={() => navigate(item.path)}
+          title={item.name}
         >
           {item.icon}
-          <span>{item.name}</span>
-        </div>
+        </Box>
       ))}
-    </nav>
+    </Box>
   );
 };
 

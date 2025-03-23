@@ -4,16 +4,41 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const Header: React.FC = () => {
   return (
-    <AppBar position="sticky" color="default" elevation={1} sx={{ backgroundColor: 'white' }}>
-      <Toolbar>
-        <Typography variant="h6" color="primary" sx={{ flexGrow: 1 }}>
+    <AppBar 
+      position="sticky" 
+      color="default" 
+      elevation={0} 
+      sx={{ 
+        backgroundColor: 'white', 
+        borderBottom: '1px solid #e0e0e0',
+        height: '60px'
+      }}
+    >
+      <Toolbar sx={{ minHeight: '60px !important' }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            flexGrow: 1, 
+            fontWeight: 600,
+            color: '#4ECDC4'
+          }}
+        >
           OneThing
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <IconButton size="medium">
-            <NotificationsIcon />
+          <IconButton size="small">
+            <NotificationsIcon sx={{ color: '#6B7280' }} />
           </IconButton>
-          <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>张</Avatar>
+          <Avatar 
+            sx={{ 
+              bgcolor: '#4B63FB', 
+              width: 36, 
+              height: 36,
+              fontSize: '14px'
+            }}
+          >
+            张
+          </Avatar>
         </Box>
       </Toolbar>
     </AppBar>

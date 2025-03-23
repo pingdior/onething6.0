@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Typography, Box, Button, TextField, List, ListItem,
+  ListItemIcon, ListItemText, Checkbox, Chip, Divider,
+  IconButton, Paper, LinearProgress
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { Goal, useGoalStore } from '../../store/goalStore';
 
 interface GoalDetailModalProps {
   goal: Goal;
   onClose: () => void;
+  open: boolean;
 }
 
-const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose }) => {
+const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose, open }) => {
   const [newSubGoal, setNewSubGoal] = useState('');
   const toggleSubGoalCompletion = useGoalStore(state => state.toggleSubGoalCompletion);
   const addSubGoal = useGoalStore(state => state.addSubGoal);
@@ -14,13 +22,14 @@ const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose }) => {
   // 格式化截止日期
   const formatDeadline = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' });
+    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
   };
   
   // 计算剩余天数
   const calculateRemainingDays = (dateString: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
     const deadline = new Date(dateString);
     deadline.setHours(0, 0, 0, 0);
     
@@ -30,133 +39,210 @@ const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose }) => {
     return diffDays;
   };
   
+  // 添加子目标
   const handleAddSubGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newSubGoal.trim() === '') return;
     
-    addSubGoal(goal.id, {
-      title: newSubGoal.trim(),
-      completed: false
-    });
-    
-    setNewSubGoal('');
+    if (newSubGoal.trim()) {
+      addSubGoal(goal.id, {
+        title: newSubGoal,
+        completed: false
+      });
+      setNewSubGoal('');
+    }
   };
   
+  // 切换子目标完成状态
+  const handleToggleSubGoal = (subGoalId: string) => {
+    toggleSubGoalCompletion(goal.id, subGoalId);
+  };
+  
+  // 根据优先级获取颜色
+  const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
+    switch (priority) {
+      case 'high':
+        return { bg: '#FFE4E4', text: '#FF5757' };
+      case 'medium':
+        return { bg: '#FFF4E4', text: '#FFA057' };
+      case 'low':
+        return { bg: '#E4F4FF', text: '#57A0FF' };
+      default:
+        return { bg: '#E4F4FF', text: '#57A0FF' };
+    }
+  };
+  
+  const remainingDays = calculateRemainingDays(goal.deadline);
+  const priorityColors = getPriorityColor(goal.priority);
+  
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-xl max-h-[90vh] overflow-auto">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <span className="text-3xl mr-3">{goal.icon || '🎯'}</span>
-            <h2 className="text-2xl font-bold">{goal.title}</h2>
-          </div>
-          <button 
-            className="text-gray-500 hover:text-gray-700"
-            onClick={onClose}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="mb-6">
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 2 }
+      }}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" component="div">
+            目标详情
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      
+      <Divider />
+      
+      <DialogContent sx={{ py: 2 }}>
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Typography variant="h5" component="div" sx={{ mr: 1 }}>
+              {goal.icon || '🎯'} {goal.title}
+            </Typography>
+            <Chip 
+              label={goal.priority === 'high' ? '高优先级' : goal.priority === 'medium' ? '中优先级' : '低优先级'} 
+              size="small" 
+              sx={{
+                bgcolor: priorityColors.bg,
+                color: priorityColors.text,
+                fontWeight: 500
+              }}
+            />
+          </Box>
+          
           {goal.description && (
-            <p className="text-gray-700 mb-4">{goal.description}</p>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {goal.description}
+            </Typography>
           )}
           
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-100 p-3 rounded-lg">
-              <div className="text-sm text-gray-500">优先级</div>
-              <div className={`font-medium ${
-                goal.priority === 'high' ? 'text-red-500' : 
-                goal.priority === 'medium' ? 'text-yellow-500' : 
-                'text-green-500'
-              }`}>
-                {goal.priority === 'high' ? '高' : goal.priority === 'medium' ? '中' : '低'}
-              </div>
-            </div>
-            
-            <div className="bg-gray-100 p-3 rounded-lg">
-              <div className="text-sm text-gray-500">截止日期</div>
-              <div className="font-medium">
-                {formatDeadline(goal.deadline)}
-                <span className={`ml-2 text-sm ${
-                  calculateRemainingDays(goal.deadline) < 7 ? 'text-red-500' : 
-                  calculateRemainingDays(goal.deadline) < 30 ? 'text-yellow-500' : 
-                  'text-green-500'
-                }`}>
-                  (剩余{calculateRemainingDays(goal.deadline)}天)
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium">完成度：{goal.completionRate}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-primary h-3 rounded-full" 
-                style={{ width: `${goal.completionRate}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              截止日期: {formatDeadline(goal.deadline)}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: remainingDays < 0 ? 'error.main' : 
+                       remainingDays < 3 ? 'warning.main' : 
+                       'success.main',
+                fontWeight: 500
+              }}
+            >
+              {remainingDays < 0 ? `已逾期 ${Math.abs(remainingDays)} 天` : 
+               remainingDays === 0 ? '今日截止' : 
+               `剩余 ${remainingDays} 天`}
+            </Typography>
+          </Box>
+        </Box>
         
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">子目标（{goal.subGoals?.filter(sg => sg.completed).length || 0}/{goal.subGoals?.length || 0}）</h3>
+        <Divider sx={{ my: 2 }} />
+        
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+            完成进度
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <LinearProgress 
+                variant="determinate" 
+                value={goal.completionRate} 
+                sx={{ 
+                  height: 10, 
+                  borderRadius: 5,
+                  bgcolor: '#e0e0e0',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: '#4ECDC4'
+                  }
+                }}
+              />
+            </Box>
+            <Typography variant="body2" fontWeight={600}>
+              {goal.completionRate}%
+            </Typography>
+          </Box>
+        </Box>
+        
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+            子目标
+          </Typography>
           
-          <ul className="space-y-2 mb-4">
-            {goal.subGoals?.map(subGoal => (
-              <li key={subGoal.id} className="flex items-center">
-                <input 
-                  type="checkbox" 
-                  className="mr-3 h-5 w-5"
-                  checked={subGoal.completed}
-                  onChange={() => toggleSubGoalCompletion(goal.id, subGoal.id)}
-                />
-                <span className={`flex-1 ${subGoal.completed ? 'line-through text-gray-400' : ''}`}>
-                  {subGoal.title}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {goal.subGoals && goal.subGoals.length > 0 ? (
+            <Paper variant="outlined" sx={{ mb: 2 }}>
+              <List disablePadding>
+                {goal.subGoals.map((subGoal) => (
+                  <ListItem
+                    key={subGoal.id}
+                    divider
+                    disablePadding
+                    sx={{ px: 2, py: 1 }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <Checkbox
+                        edge="start"
+                        checked={subGoal.completed}
+                        onChange={() => handleToggleSubGoal(subGoal.id)}
+                        sx={{
+                          color: '#4ECDC4',
+                          '&.Mui-checked': {
+                            color: '#4ECDC4',
+                          },
+                        }}
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={subGoal.title}
+                      sx={{
+                        '& .MuiListItemText-primary': {
+                          textDecoration: subGoal.completed ? 'line-through' : 'none',
+                          color: subGoal.completed ? 'text.disabled' : 'text.primary'
+                        }
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+          ) : (
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              暂无子目标
+            </Typography>
+          )}
           
-          <form onSubmit={handleAddSubGoal} className="flex items-center">
-            <input 
-              type="text"
+          <Box 
+            component="form" 
+            onSubmit={handleAddSubGoal}
+            sx={{ display: 'flex', gap: 1 }}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="添加新子目标..."
               value={newSubGoal}
               onChange={(e) => setNewSubGoal(e.target.value)}
-              placeholder="添加新的子目标..."
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2 mr-2 focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <button 
-              type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-md"
+            <Button 
+              type="submit" 
+              variant="outlined"
+              disabled={!newSubGoal.trim()}
             >
               添加
-            </button>
-          </form>
-        </div>
-        
-        <div className="flex justify-end space-x-3">
-          <button 
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
-            onClick={onClose}
-          >
-            关闭
-          </button>
-          <button 
-            className="px-4 py-2 bg-primary text-white rounded-md"
-            onClick={onClose}
-          >
-            编辑目标
-          </button>
-        </div>
-      </div>
-    </div>
+            </Button>
+          </Box>
+        </Box>
+      </DialogContent>
+      
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} variant="outlined">
+          关闭
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

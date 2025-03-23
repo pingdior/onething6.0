@@ -1,156 +1,163 @@
-import React, { useState } from 'react';
-import AppLayout from '../components/layout/AppLayout';
-import ConversationMemory from '../components/companion/ConversationMemory';
-import { useTaskStore } from '../store/taskStore';
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+import MainLayout from '../components/layout/MainLayout';
+import EnhancedCompanion from '../components/companion/EnhancedCompanion';
 
 const Companion: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'chat' | 'status'>('chat');
-  const addTask = useTaskStore(state => state.addTask);
-  
-  // 处理发送消息
-  const handleSendMessage = async (message: string): Promise<string> => {
-    // 实际项目中会调用AI API
-    // 这里模拟AI回复
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (message.includes('任务')) {
-      return '好的，我已经帮你记录了这个任务。你还需要做其他安排吗？';
-    } else if (message.includes('目标')) {
-      return '目标是成功的关键！你可以在目标页面详细设置你的目标，包括截止日期和优先级。需要我帮你制定目标计划吗？';
-    } else if (message.includes('情绪') || message.includes('心情')) {
-      return '注意情绪变化对你的生产力很重要。你可以在情绪页面记录你的情绪，我会给你一些调节建议。';
-    } else {
-      return '我理解了。我会一直在这里支持你。有什么其他我能帮到你的吗？';
-    }
-  };
-  
-  // 处理任务创建
-  const handleCreateTask = (taskTitle: string) => {
-    console.log('创建任务:', taskTitle); // 添加日志
-    
-    const newTaskId = addTask({
-      title: taskTitle,
-      time: `${new Date().getHours()}:00-${new Date().getHours() + 1}:00`,
-      completed: false,
-      timeRange: {
-        start: `${new Date().getHours()}:00`,
-        end: `${new Date().getHours() + 1}:00`
-      },
-      priority: 'medium'
-    });
-    
-    console.log('任务已创建，ID:', newTaskId); // 添加任务创建成功日志
-  };
-  
   return (
-    <AppLayout>
-      <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-120px)]">
-        {/* 左侧聊天区域 */}
-        <div className="flex-1 card overflow-hidden flex flex-col">
-          <div className="card-title flex justify-between">
-            <div className="flex items-center">
-              <span className="mr-2">AI伴侣</span>
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            </div>
-            <div className="flex">
-              <button 
-                className={`text-sm px-3 py-1 rounded-md ${activeTab === 'chat' ? 'bg-primary text-white' : 'bg-gray-100'}`}
-                onClick={() => setActiveTab('chat')}
-              >
-                聊天
-              </button>
-              <button 
-                className={`text-sm px-3 py-1 rounded-md ml-2 ${activeTab === 'status' ? 'bg-primary text-white' : 'bg-gray-100'}`}
-                onClick={() => setActiveTab('status')}
-              >
-                状态
-              </button>
-            </div>
-          </div>
-          
-          {activeTab === 'chat' ? (
-            <div className="flex-1 overflow-hidden">
-              <ConversationMemory 
-                onSendMessage={handleSendMessage}
-                onCreateTask={handleCreateTask}
-              />
-            </div>
-          ) : (
-            <div className="p-4">
-              <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-primary to-tertiary flex items-center justify-center text-white text-4xl mb-4">
-                  🤖
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-semibold">小助手</div>
-                  <div className="text-sm text-gray-500">等级：3级 (成长值：65/100)</div>
-                  <div className="text-sm mt-2">特质：温暖、鼓励型</div>
-                </div>
-                
-                <div className="w-full mt-6">
-                  <div className="text-sm font-semibold">成长进度</div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '65%' }}></div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 text-right">65/100</div>
-                </div>
-                
-                <div className="w-full mt-6">
-                  <div className="text-sm font-semibold">互动数据</div>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    <div className="bg-gray-100 p-2 rounded-lg text-center">
-                      <div className="font-medium">126</div>
-                      <div className="text-xs text-gray-500">对话次数</div>
-                    </div>
-                    <div className="bg-gray-100 p-2 rounded-lg text-center">
-                      <div className="font-medium">43</div>
-                      <div className="text-xs text-gray-500">创建任务</div>
-                    </div>
-                    <div className="bg-gray-100 p-2 rounded-lg text-center">
-                      <div className="font-medium">12</div>
-                      <div className="text-xs text-gray-500">目标完成</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+    <MainLayout>
+      <Box sx={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            fontWeight: 600, 
+            color: '#1A535C', 
+            mb: 3 
+          }}
+        >
+          AI伙伴
+        </Typography>
         
-        {/* 右侧信息区域 */}
-        <div className="w-full md:w-80 space-y-4">
-          <div className="card">
-            <div className="card-title">互动记忆</div>
-            <div className="text-sm font-semibold">重要时刻：</div>
-            <div className="bg-gray-100 rounded-lg p-3 my-2">• 首次设定PMP目标</div>
-            <div className="bg-gray-100 rounded-lg p-3 my-2">• 克服学习瓶颈</div>
-            <div className="bg-gray-100 rounded-lg p-3 my-2">• 第一次完成周计划</div>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' }, 
+          gap: 3 
+        }}>
+          {/* 主AI聊天区域 */}
+          <Box sx={{ flex: 1, height: { xs: 'calc(100vh - 200px)', md: 'calc(100vh - 160px)' } }}>
+            <EnhancedCompanion />
+          </Box>
+          
+          {/* 右侧信息面板 */}
+          <Box sx={{ width: { xs: '100%', md: '300px' }, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* 伙伴成长状态 */}
+            <Box sx={{ 
+              bgcolor: 'white', 
+              p: 3, 
+              borderRadius: 2, 
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)' 
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                伙伴成长
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                随着你的使用，AI伙伴会深入了解你的习惯、偏好和目标，提供更个性化的帮助。
+              </Typography>
+              
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  当前等级: Lv.3 (进阶助手)
+                </Typography>
+                <Box sx={{ 
+                  height: 8, 
+                  bgcolor: '#E5E7EB', 
+                  borderRadius: 4, 
+                  mb: 1, 
+                  position: 'relative' 
+                }}>
+                  <Box 
+                    sx={{ 
+                      position: 'absolute', 
+                      left: 0, 
+                      top: 0, 
+                      height: '100%', 
+                      width: '65%',
+                      bgcolor: '#4ECDC4',
+                      borderRadius: 4
+                    }}
+                  />
+                </Box>
+                <Typography variant="caption" color="text.secondary">
+                  65% 到 Lv.4 (战略顾问)
+                </Typography>
+              </Box>
+              
+              <Typography variant="subtitle2" gutterBottom>
+                已解锁能力:
+              </Typography>
+              <Box component="ul" sx={{ pl: 2, mb: 0 }}>
+                <Typography component="li" variant="body2">
+                  深度目标分析
+                </Typography>
+                <Typography component="li" variant="body2">
+                  个性化任务建议
+                </Typography>
+                <Typography component="li" variant="body2">
+                  基础情绪支持
+                </Typography>
+              </Box>
+            </Box>
             
-            <div className="text-sm font-semibold mt-4">最近话题：</div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className="px-2 py-1 bg-gray-100 rounded-md text-sm">#学习进度</span>
-              <span className="px-2 py-1 bg-gray-100 rounded-md text-sm">#情绪管理</span>
-              <span className="px-2 py-1 bg-gray-100 rounded-md text-sm">#时间规划</span>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-title">互动仪式</div>
-            <div className="mb-6">
-              <div className="font-medium">☀️ 晨间计划</div>
-              <div className="text-sm text-gray-500 my-1">状态：未完成</div>
-              <button className="btn btn-sm btn-primary mt-2">开始晨间计划</button>
-            </div>
-            
-            <div>
-              <div className="font-medium">🌙 晚间复盘</div>
-              <div className="text-sm text-gray-500 my-1">状态：19:30可用</div>
-              <button className="btn btn-sm btn-secondary mt-2">设置提醒</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </AppLayout>
+            {/* 互动记忆 */}
+            <Box sx={{ 
+              bgcolor: 'white', 
+              p: 3, 
+              borderRadius: 2, 
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+              display: { xs: 'none', md: 'block' }
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                互动记忆
+              </Typography>
+              
+              <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+                重要时刻:
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
+                  <Box component="span" sx={{ mr: 1, color: 'primary.main' }}>•</Box>
+                  首次设定PMP目标
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
+                  <Box component="span" sx={{ mr: 1, color: 'primary.main' }}>•</Box>
+                  克服学习瓶颈
+                </Typography>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box component="span" sx={{ mr: 1, color: 'primary.main' }}>•</Box>
+                  完成周计划
+                </Typography>
+              </Box>
+              
+              <Typography variant="subtitle2" gutterBottom>
+                经常讨论的话题:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ 
+                  bgcolor: 'rgba(78, 205, 196, 0.1)', 
+                  color: '#4ECDC4',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: '0.75rem'
+                }}>
+                  #学习进度
+                </Box>
+                <Box sx={{ 
+                  bgcolor: 'rgba(78, 205, 196, 0.1)', 
+                  color: '#4ECDC4',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: '0.75rem'
+                }}>
+                  #时间管理
+                </Box>
+                <Box sx={{ 
+                  bgcolor: 'rgba(78, 205, 196, 0.1)', 
+                  color: '#4ECDC4',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: '0.75rem'
+                }}>
+                  #目标设定
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </MainLayout>
   );
 };
 
