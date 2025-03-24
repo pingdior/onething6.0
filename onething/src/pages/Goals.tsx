@@ -5,7 +5,7 @@ import {
   Divider, IconButton
 } from '@mui/material';
 import { Add as AddIcon, FilterList as FilterListIcon } from '@mui/icons-material';
-import MainLayout from '../components/layout/MainLayout';
+import AppLayout from '../components/layout/AppLayout';
 import GoalCard from '../components/goals/GoalCard';
 import GoalDetailModal from '../components/goals/GoalDetailModal';
 import AddGoalModal from '../components/goals/AddGoalModal';
@@ -91,7 +91,7 @@ const Goals: React.FC = () => {
   };
   
   return (
-    <MainLayout>
+    <AppLayout>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h5" sx={{ fontWeight: 600, color: '#1A535C' }}>
@@ -248,8 +248,8 @@ const Goals: React.FC = () => {
       
       {/* 添加目标对话框 */}
       <AddGoalModal 
-        open={showAddModal} 
-        onClose={handleCloseAddModal} 
+        open={showAddModal}
+        onClose={handleCloseAddModal}
       />
       
       {/* 目标详情对话框 */}
@@ -260,7 +260,7 @@ const Goals: React.FC = () => {
           onClose={handleCloseDetailModal}
         />
       )}
-    </MainLayout>
+    </AppLayout>
   );
 };
 

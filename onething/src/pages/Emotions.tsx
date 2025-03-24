@@ -222,13 +222,12 @@ const Emotions: React.FC = () => {
       </div>
 
       {/* 添加情绪记录模态框 */}
-      {showAddModal && (
-        <AddEmotionModal
-          onSave={handleSaveEmotion}
-          onClose={() => setShowAddModal(false)}
-          initialRecord={selectedEmotion}
-        />
-      )}
+      <AddEmotionModal
+        open={showAddModal}
+        onSave={handleSaveEmotion}
+        onClose={() => setShowAddModal(false)}
+        initialRecord={selectedEmotion}
+      />
 
       {/* 情绪详情模态框 */}
       {showDetailModal && selectedEmotion && (

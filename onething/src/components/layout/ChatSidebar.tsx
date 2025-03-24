@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, IconButton, Badge, Avatar, Divider } from '@mui/material';
+import { InfoOutlined as InfoIcon } from '@mui/icons-material';
 import aiService, { Message as AIMessage } from '../../services/aiService';
 import { useTaskStore, Task } from '../../store/taskStore';
 import taskDiscussService, { TaskDiscussEvent } from '../../services/taskDiscussService';
+import CompanionInfoDialog from '../companion/CompanionInfoDialog';
 
 // 消息类型定义
 interface ChatMessage {
@@ -32,6 +35,8 @@ const ChatSidebar: React.FC = () => {
   const [conversationHistory, setConversationHistory] = useState<AIMessage[]>([
     aiService.getDefaultSystemMessage()
   ]);
+
+  const [showCompanionInfo, setShowCompanionInfo] = useState(false);
 
   // 从本地存储加载聊天历史
   useEffect(() => {
@@ -421,19 +426,62 @@ ${task.description ? `描述：${task.description}` : ''}`;
     };
   }, [conversationHistory]);
 
+  // 打开伙伴信息面板
+  const handleOpenCompanionInfo = () => {
+    setShowCompanionInfo(true);
+  };
+  
+  // 关闭伙伴信息面板
+  const handleCloseCompanionInfo = () => {
+    setShowCompanionInfo(false);
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* 聊天头部 */}
-      <div style={{
-        padding: '1rem',
-        borderBottom: '1px solid var(--gray-200)',
-        fontWeight: '600',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}>
-        <span>🤖 AI伴侣</span>
-      </div>
+      <Box
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Avatar
+            sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.9rem' }}
+          >
+            🤖
+          </Avatar>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            AI伙伴
+          </Typography>
+          <Badge 
+            badgeContent="Lv.3" 
+            color="primary"
+            sx={{ 
+              '& .MuiBadge-badge': { 
+                fontSize: '0.65rem', 
+                height: 16, 
+                minWidth: 16,
+                ml: 1 // 添加左边距，使标签向右移动
+              } 
+            }}
+          />
+        </Box>
+        
+        <IconButton
+          size="small"
+          onClick={handleOpenCompanionInfo}
+          title="AI伙伴信息"
+          sx={{ color: 'text.secondary' }}
+        >
+          <InfoIcon fontSize="small" />
+        </IconButton>
+      </Box>
       
       {/* 聊天消息区域 */}
       <div style={{
@@ -533,7 +581,13 @@ ${task.description ? `描述：${task.description}` : ''}`;
           </svg>
         </button>
       </div>
-    </div>
+      
+      {/* 伙伴信息弹窗 */}
+      <CompanionInfoDialog 
+        open={showCompanionInfo} 
+        onClose={handleCloseCompanionInfo} 
+      />
+    </Box>
   );
 };
 

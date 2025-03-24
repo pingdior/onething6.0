@@ -1,9 +1,33 @@
 import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Box,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  Divider,
+  Grid,
+  Slider,
+  Paper,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  ListItemButton,
+  Checkbox
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { EmotionType, EmotionRecord } from '../../store/emotionStore';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
 
 interface AddEmotionModalProps {
+  open: boolean;
   onClose: () => void;
   onSave: (record: Omit<EmotionRecord, 'id'>) => void;
   initialRecord?: EmotionRecord;
@@ -23,7 +47,7 @@ const factorOptions = [
   '工作', '学习', '健康', '人际关系', '家庭', '财务', '个人成长'
 ];
 
-const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ onClose, onSave, initialRecord }) => {
+const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave, initialRecord }) => {
   const goals = useGoalStore(state => state.goals);
   const tasks = useTaskStore(state => state.tasks);
   
@@ -80,156 +104,236 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ onClose, onSave, init
     };
     
     onSave(emotionRecord);
+    handleClose();
+  };
+  
+  const handleClose = () => {
+    if (!initialRecord) {
+      setSelectedEmotion('calm');
+      setIntensity(5);
+      setNote('');
+      setSelectedFactors([]);
+      setSelectedGoalIds([]);
+      setSelectedTaskIds([]);
+      setDate(new Date().toISOString().split('T')[0]);
+    }
+    onClose();
   };
   
   return (
-    <div className="modal">
-      <div className="modal-content">
-        <div className="modal-header">
-          <div className="modal-title">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="md"
+      PaperProps={{
+        sx: { borderRadius: 2 }
+      }}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" component="div">
             {initialRecord ? '编辑情绪记录' : '记录今日情绪'}
-          </div>
-          <div className="modal-close" onClick={onClose}>
-            &times;
-          </div>
-        </div>
-        
-        <div className="modal-body">
-          <div className="mb-4">
-            <div className="form-label">你今天感觉如何？</div>
-            <div className="emotion-grid">
+          </Typography>
+          <IconButton onClick={handleClose} size="small">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      
+      <Divider />
+      
+      <DialogContent sx={{ pt: 2 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              你今天感觉如何？
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {emotionOptions.map(option => (
-                <div 
+                <Paper
                   key={option.type}
-                  className={`emotion-item ${selectedEmotion === option.type ? 'active' : ''}`}
+                  elevation={selectedEmotion === option.type ? 3 : 1}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    cursor: 'pointer',
+                    width: 80,
+                    textAlign: 'center',
+                    border: selectedEmotion === option.type ? '2px solid' : '1px solid',
+                    borderColor: selectedEmotion === option.type ? 'primary.main' : 'divider',
+                    bgcolor: selectedEmotion === option.type ? 'primary.light' : 'background.paper',
+                    '&:hover': {
+                      bgcolor: selectedEmotion === option.type ? 'primary.light' : 'action.hover'
+                    }
+                  }}
                   onClick={() => handleSelectEmotion(option.type)}
                 >
-                  <div className="emotion-icon">{option.emoji}</div>
-                  <div className="text-sm">{option.label}</div>
-                </div>
+                  <Typography variant="h4" component="div" sx={{ mb: 0.5 }}>
+                    {option.emoji}
+                  </Typography>
+                  <Typography variant="body2">
+                    {option.label}
+                  </Typography>
+                </Paper>
               ))}
-            </div>
-          </div>
+            </Box>
+          </Grid>
           
-          <div className="mb-4">
-            <div className="form-label">情绪强度：</div>
-            <div className="flex items-center mb-1">
-              <span className="mr-2">弱</span>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={intensity} 
-                onChange={(e) => setIntensity(parseInt(e.target.value))}
-                className="w-full"
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              情绪强度
+            </Typography>
+            <Box sx={{ px: 1 }}>
+              <Slider
+                value={intensity}
+                onChange={(_, value) => setIntensity(value as number)}
+                min={1}
+                max={10}
+                step={1}
+                marks
+                valueLabelDisplay="auto"
               />
-              <span className="ml-2">强</span>
-            </div>
-            <div className="text-center text-sm text-gray-600">{intensity}/10</div>
-          </div>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">弱</Typography>
+                <Typography variant="body2" color="text.secondary">强</Typography>
+              </Box>
+            </Box>
+          </Grid>
           
-          <div className="mb-4">
-            <div className="form-label">关联事件：</div>
-            <div className="flex flex-wrap gap-2 mb-2">
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              关联事件
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {factorOptions.map(factor => (
-                <div 
+                <Chip
                   key={factor}
-                  className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
-                    selectedFactors.includes(factor)
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
+                  label={factor}
+                  clickable
+                  color={selectedFactors.includes(factor) ? 'primary' : 'default'}
                   onClick={() => toggleFactor(factor)}
-                >
-                  {factor}
-                </div>
+                  variant={selectedFactors.includes(factor) ? 'filled' : 'outlined'}
+                />
               ))}
-            </div>
-          </div>
+            </Box>
+          </Grid>
           
-          <div className="mb-4">
-            <div className="form-label">详细描述：</div>
-            <textarea 
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              详细描述
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              placeholder="今天发生了什么？你的感受如何？"
+              variant="outlined"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="今天发生了什么？你的感受如何？"
-              className="w-full p-2 border border-gray-300 rounded-lg resize-none"
-              rows={4}
-            ></textarea>
-          </div>
+            />
+          </Grid>
           
-          <div className="mb-4">
-            <div className="form-label">日期：</div>
-            <input 
-              type="date" 
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle1" gutterBottom>
+              日期
+            </Typography>
+            <TextField
+              fullWidth
+              type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+              InputLabelProps={{ shrink: true }}
             />
-          </div>
+          </Grid>
           
           {goals.length > 0 && (
-            <div className="mb-4">
-              <div className="form-label">关联目标：</div>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {goals.map(goal => (
-                  <div 
-                    key={goal.id}
-                    className={`p-2 rounded-lg flex items-center cursor-pointer ${
-                      selectedGoalIds.includes(goal.id)
-                        ? 'bg-primary bg-opacity-10 border border-primary'
-                        : 'border border-gray-200'
-                    }`}
-                    onClick={() => toggleGoal(goal.id)}
-                  >
-                    <span className="mr-2">{goal.icon || '🎯'}</span>
-                    <span className="text-sm">{goal.title}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle1" gutterBottom>
+                关联目标
+              </Typography>
+              <Paper variant="outlined" sx={{ maxHeight: 200, overflow: 'auto' }}>
+                <List dense disablePadding>
+                  {goals.map(goal => (
+                    <ListItemButton
+                      key={goal.id}
+                      onClick={() => toggleGoal(goal.id)}
+                      dense
+                    >
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Checkbox
+                          edge="start"
+                          checked={selectedGoalIds.includes(goal.id)}
+                          tabIndex={-1}
+                          disableRipple
+                        />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary={
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography component="span" mr={1}>
+                              {goal.icon || '🎯'}
+                            </Typography>
+                            <Typography variant="body2">
+                              {goal.title}
+                            </Typography>
+                          </Box>
+                        } 
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Paper>
+            </Grid>
           )}
           
           {tasks.length > 0 && (
-            <div className="mb-4">
-              <div className="form-label">关联任务：</div>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {tasks.map(task => (
-                  <div 
-                    key={task.id}
-                    className={`p-2 rounded-lg flex items-center justify-between cursor-pointer ${
-                      selectedTaskIds.includes(task.id)
-                        ? 'bg-primary bg-opacity-10 border border-primary'
-                        : 'border border-gray-200'
-                    }`}
-                    onClick={() => toggleTask(task.id)}
-                  >
-                    <span className="text-sm">{task.title}</span>
-                    <span className="text-xs text-gray-500">{task.completed ? '已完成' : '未完成'}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom>
+                关联任务
+              </Typography>
+              <Paper variant="outlined" sx={{ maxHeight: 200, overflow: 'auto' }}>
+                <List dense disablePadding>
+                  {tasks.map(task => (
+                    <ListItemButton
+                      key={task.id}
+                      onClick={() => toggleTask(task.id)}
+                      dense
+                    >
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Checkbox
+                          edge="start"
+                          checked={selectedTaskIds.includes(task.id)}
+                          tabIndex={-1}
+                          disableRipple
+                        />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary={task.title} 
+                        secondary={task.completed ? '已完成' : '未完成'} 
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Paper>
+            </Grid>
           )}
-        </div>
-        
-        <div className="modal-footer">
-          <button 
-            className="btn btn-secondary"
-            onClick={onClose}
-          >
-            取消
-          </button>
-          <button 
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={!selectedEmotion || !note}
-          >
-            保存
-          </button>
-        </div>
-      </div>
-    </div>
+        </Grid>
+      </DialogContent>
+      
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={handleClose}>
+          取消
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={!selectedEmotion || !note}
+        >
+          保存
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

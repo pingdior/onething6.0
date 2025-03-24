@@ -31,7 +31,7 @@ const App: React.FC = () => {
           <Route path="/tasks" element={isLoggedIn ? <Tasks /> : <Navigate to="/welcome" />} />
           <Route path="/emotions" element={isLoggedIn ? <Emotions /> : <Navigate to="/welcome" />} />
           <Route path="/review" element={isLoggedIn ? <Review /> : <Navigate to="/welcome" />} />
-          <Route path="/companion" element={isLoggedIn ? <Companion /> : <Navigate to="/welcome" />} />
+          <Route path="/companion" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/welcome" />} />
           <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/welcome" />} />
           <Route path="/help" element={isLoggedIn ? <Help /> : <Navigate to="/welcome" />} />
           

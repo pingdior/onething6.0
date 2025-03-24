@@ -10,6 +10,7 @@ const Tasks: React.FC = () => {
   const [activeView, setActiveView] = useState<'timeline' | 'kanban'>('timeline');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   
   // 从状态管理获取任务和操作函数
   const tasks = useTaskStore(state => state.tasks);
@@ -33,16 +34,12 @@ const Tasks: React.FC = () => {
   
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
-  };
-  
-  const openAddTaskModal = () => {
-    console.log("打开添加任务模态框");
-    setShowAddModal(true);
+    setShowDetailModal(true);
   };
   
   // 添加任务处理函数
   const handleAddTask = () => {
-    openAddTaskModal();
+    setShowAddModal(true);
   };
   
   // 删除任务处理函数
@@ -55,6 +52,7 @@ const Tasks: React.FC = () => {
   const handleEditTask = (task: Task) => {
     console.log("编辑任务:", task.id);
     setSelectedTask(task);
+    setShowDetailModal(true);
   };
   
   // 与AI讨论任务处理函数
@@ -281,18 +279,18 @@ const Tasks: React.FC = () => {
         )}
       </div>
       
-      {/* 任务详情弹窗 */}
-      {selectedTask && (
-        <TaskDetailModal 
-          task={selectedTask} 
-          onClose={() => setSelectedTask(null)} 
-        />
-      )}
-      
       {/* 添加任务弹窗 */}
-      {showAddModal && (
-        <AddTaskModal 
-          onClose={() => setShowAddModal(false)} 
+      <AddTaskModal 
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAIPlan={() => console.log("AI规划")}
+      />
+      
+      {/* 任务详情弹窗 */}
+      {selectedTask && showDetailModal && (
+        <TaskDetailModal
+          task={selectedTask}
+          onClose={() => setShowDetailModal(false)}
         />
       )}
     </AppLayout>

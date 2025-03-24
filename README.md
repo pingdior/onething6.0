@@ -123,6 +123,7 @@ GraphQL API: http://localhost:4000/graphql
 - 互联数据确保一致性
 
 ## 文件夹结构
+```markdown
 onething/
 ├── src/            # 前端源代码目录
 ├── schema/         # GraphQL schema文件
@@ -130,6 +131,7 @@ onething/
 ├── public/         # 静态资源
 ├── server.js       # 后端服务器入口
 └── 其他配置文件...
+```
 
 ## 常见问题解答
 

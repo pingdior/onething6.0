@@ -1,35 +1,40 @@
 import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Box,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  Divider
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { useTaskStore } from '../../store/taskStore';
 
 interface AddTaskModalProps {
+  open: boolean;
   onClose: () => void;
   onAIPlan?: () => void;
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAIPlan }) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onAIPlan }) => {
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const addTask = useTaskStore(state => state.addTask);
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     if (!title || !startTime || !endTime) {
-      console.error('任务信息不完整，无法添加任务');
       return;
     }
     
     const timeString = `${startTime}-${endTime}`;
     
-    // 添加调试日志
-    console.log('正在添加任务:', {
-      title,
-      time: timeString,
-      timeRange: { start: startTime, end: endTime }
-    });
-    
-    // 调用addTask函数添加任务
     try {
       addTask({
         title,
@@ -40,84 +45,115 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onAIPlan }) => {
           end: endTime
         }
       });
-      console.log('任务添加成功');
-      onClose();
+      handleClose();
     } catch (error) {
       console.error('添加任务失败:', error);
     }
   };
   
+  const handleClose = () => {
+    setTitle('');
+    setStartTime('');
+    setEndTime('');
+    onClose();
+  };
+  
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">添加临时任务</h3>
-          <button 
-            className="text-gray-500 hover:text-gray-700"
-            onClick={onClose}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              任务内容：
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-              placeholder="输入任务内容..."
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: { borderRadius: 2 }
+      }}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" component="div">
+            添加任务
+          </Typography>
+          <IconButton onClick={handleClose} size="small">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      
+      <Divider />
+      
+      <DialogContent sx={{ pt: 2 }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="task-title"
+            label="任务内容"
+            name="title"
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="输入任务内容..."
+          />
+          
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <TextField
               required
+              fullWidth
+              id="start-time"
+              label="开始时间"
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              inputProps={{
+                step: 300, // 5分钟为步长
+              }}
             />
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              时间：
-            </label>
-            <div className="flex space-x-2 items-center">
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                required
-              />
-              <span>至</span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-between">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              添加
-            </button>
-            <button
-              type="button"
-              onClick={onAIPlan}
-              className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
-            >
-              让AI帮我规划
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            
+            <TextField
+              required
+              fullWidth
+              id="end-time"
+              label="结束时间"
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              inputProps={{
+                step: 300, // 5分钟为步长
+              }}
+            />
+          </Box>
+        </Box>
+      </DialogContent>
+      
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        {onAIPlan && (
+          <Button
+            color="secondary"
+            onClick={onAIPlan}
+          >
+            让AI帮我规划
+          </Button>
+        )}
+        <Box sx={{ flex: 1 }} />
+        <Button onClick={handleClose}>
+          取消
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={!title || !startTime || !endTime}
+        >
+          添加
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

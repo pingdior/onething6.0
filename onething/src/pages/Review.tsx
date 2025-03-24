@@ -5,6 +5,7 @@ import { useReviewStore, ReviewData } from '../store/reviewStore';
 import AppLayout from '../components/layout/AppLayout';
 import ReviewCard from '../components/review/ReviewCard';
 import ReviewDetailModal from '../components/review/ReviewDetailModal';
+import GenerateReviewModal from '../components/review/GenerateReviewModal';
 
 type TimeRange = 'week' | 'month' | 'custom';
 
@@ -16,7 +17,7 @@ const Review: React.FC = () => {
   
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('week');
   const [selectedReview, setSelectedReview] = useState<ReviewData | null>(null);
-  const [showGenerate, setShowGenerate] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [customDateRange, setCustomDateRange] = useState({
     start: '',
     end: ''
@@ -73,7 +74,7 @@ const Review: React.FC = () => {
     });
     
     setSelectedReview(newReview);
-    setShowGenerate(false);
+    setShowGenerateModal(false);
   };
   
   const handleReviewClick = (review: ReviewData) => {
@@ -93,7 +94,7 @@ const Review: React.FC = () => {
           <span>目标复盘</span>
           <button 
             className="btn btn-primary btn-sm"
-            onClick={() => setShowGenerate(true)}
+            onClick={() => setShowGenerateModal(true)}
           >
             生成新复盘
           </button>
@@ -157,7 +158,7 @@ const Review: React.FC = () => {
               <p className="mb-4">暂时没有复盘记录</p>
               <button 
                 className="btn btn-primary"
-                onClick={() => setShowGenerate(true)}
+                onClick={() => setShowGenerateModal(true)}
               >
                 生成首个复盘报告
               </button>
@@ -174,45 +175,13 @@ const Review: React.FC = () => {
         />
       )}
       
-      {/* 生成复盘确认框 */}
-      {showGenerate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">生成新复盘</h3>
-              <button 
-                className="text-gray-500 hover:text-gray-700"
-                onClick={() => setShowGenerate(false)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <p className="text-gray-700">
-                确定要生成{getTimeRangeLabel()}的复盘报告吗？系统将分析您的目标和任务完成情况，生成详细的复盘报告。
-              </p>
-            </div>
-            
-            <div className="flex justify-end space-x-3">
-              <button 
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
-                onClick={() => setShowGenerate(false)}
-              >
-                取消
-              </button>
-              <button 
-                className="px-4 py-2 bg-primary text-white rounded-md"
-                onClick={handleGenerateReview}
-              >
-                生成复盘
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 使用新的生成复盘弹窗组件 */}
+      <GenerateReviewModal
+        open={showGenerateModal}
+        onClose={() => setShowGenerateModal(false)}
+        onGenerate={handleGenerateReview}
+        timeRangeLabel={getTimeRangeLabel()}
+      />
     </AppLayout>
   );
 };

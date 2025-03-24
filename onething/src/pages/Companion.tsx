@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import MainLayout from '../components/layout/MainLayout';
+import AppLayout from '../components/layout/AppLayout';
 import EnhancedCompanion from '../components/companion/EnhancedCompanion';
 
 const Companion: React.FC = () => {
   return (
-    <MainLayout>
+    <AppLayout>
       <Box sx={{ maxWidth: '1200px', margin: '0 auto' }}>
         <Typography 
           variant="h5" 
@@ -157,7 +157,7 @@ const Companion: React.FC = () => {
           </Box>
         </Box>
       </Box>
-    </MainLayout>
+    </AppLayout>
   );
 };
 
