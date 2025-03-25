@@ -26,7 +26,7 @@ jobs:
     - name: Build project
       run: |
         cd onething
-        npm run build
+        CI=false npm run build
         
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2

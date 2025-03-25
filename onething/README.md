@@ -81,6 +81,47 @@ npm run start
 - `MONGO_URI`：MongoDB连接字符串
 - `DEEPSEEK_API_KEY`：DeepSeek API密钥
 
+## ESLint警告修复
+
+如果在构建过程中遇到ESLint警告导致CI构建失败，可以采用以下两种方法解决：
+
+1. **临时解决方案**：在构建命令前添加`CI=false`环境变量，如：
+   ```bash
+   CI=false npm run build
+   ```
+
+2. **系统修复方案**：使用提供的修复脚本修复所有ESLint警告：
+   ```bash
+   node scripts/fix-eslint-warnings.js
+   ```
+   
+   此脚本会自动修复：
+   - 未使用的导入和变量
+   - 默认导出格式问题
+   - 无用的转义字符
+   
+   对于React Hooks依赖项警告，需手动审查修复。
+
+## GitHub Actions部署
+
+本项目使用GitHub Actions进行持续集成和部署。每当代码推送到main分支时，会自动触发构建和部署流程：
+
+1. 检出代码
+2. 设置Node.js环境
+3. 安装依赖
+4. 构建项目
+5. 部署到阿里云服务器
+
+为了配置GitHub Actions，需要在仓库的Settings > Secrets and variables > Actions中添加以下密钥：
+
+- `SERVER_IP`：服务器IP地址
+- `SERVER_USER`：服务器SSH用户名
+- `SSH_PRIVATE_KEY`：用于SSH连接的私钥
+- `MONGO_URL`：MongoDB服务器地址
+- `MONGO_DB`：MongoDB数据库名
+- `MONGO_USER`：MongoDB用户名
+- `MONGO_PASSWORD`：MongoDB密码
+
 ## 贡献
 
 欢迎提交问题和贡献代码！ 
