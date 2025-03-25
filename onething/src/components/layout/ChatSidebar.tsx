@@ -451,14 +451,6 @@ ${task.description ? `描述：${task.description}` : ''}`;
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar
-            sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.9rem' }}
-          >
-            🤖
-          </Avatar>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            AI伙伴
-          </Typography>
           <Badge 
             badgeContent="Lv.3" 
             color="primary"
@@ -467,10 +459,22 @@ ${task.description ? `描述：${task.description}` : ''}`;
                 fontSize: '0.65rem', 
                 height: 16, 
                 minWidth: 16,
-                ml: 1 // 添加左边距，使标签向右移动
-              } 
+                padding: '0 4px',
+                right: -8,
+                top: 2,
+                borderRadius: '8px'
+              }
             }}
-          />
+          >
+            <Avatar
+              sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.9rem' }}
+            >
+              🤖
+            </Avatar>
+          </Badge>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            AI伙伴
+          </Typography>
         </Box>
         
         <IconButton

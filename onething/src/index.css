@@ -317,3 +317,167 @@ body {
     transform: translateY(-4px);
   }
 }
+
+/* 移动设备特定样式 */
+.mobile-device .app-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* 移动设备下的导航栏样式 - 转为底部导航 */
+.mobile-device .sidebar {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: auto;
+  background: var(--white);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  padding: 8px 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-device .sidebar-item {
+  flex-direction: column;
+  padding: 8px;
+  margin: 0;
+  font-size: 0.7rem;
+  text-align: center;
+  color: var(--gray-500);
+}
+
+.mobile-device .sidebar-item.active {
+  color: var(--primary-color);
+}
+
+.mobile-device .sidebar-item svg {
+  width: 22px;
+  height: 22px;
+  margin-right: 0;
+  margin-bottom: 4px;
+}
+
+.mobile-device .content {
+  margin-left: 0;
+  padding-bottom: 70px; /* 为底部导航留出空间 */
+  width: 100%;
+}
+
+.mobile-device .page-content {
+  padding: 16px;
+  max-height: calc(100vh - 130px); /* 调整内容区高度，为顶部和底部导航留出空间 */
+}
+
+/* 移动设备下隐藏侧边聊天 - 转为可切换显示 */
+.mobile-device .chat-sidebar {
+  position: fixed;
+  right: -320px;
+  transition: right 0.3s ease;
+  z-index: 1000;
+  height: 100vh;
+  width: 280px;
+}
+
+.mobile-device .chat-sidebar.active {
+  right: 0;
+}
+
+/* 移动设备下的卡片样式优化 */
+.mobile-device .card {
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 移动设备下的Header样式优化 */
+.mobile-device .header {
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 16px;
+}
+
+/* 移动设备下的按钮样式调整 */
+.mobile-device .btn {
+  height: 44px;
+  font-size: 0.9rem;
+}
+
+.mobile-device .btn-sm {
+  height: 36px;
+  font-size: 0.8rem;
+}
+
+/* 响应式文本大小 */
+.mobile-device h1 {
+  font-size: 1.5rem;
+}
+
+.mobile-device h2 {
+  font-size: 1.3rem;
+}
+
+.mobile-device h3 {
+  font-size: 1.1rem;
+}
+
+.mobile-device p {
+  font-size: 0.95rem;
+}
+
+/* 移动端的聊天悬浮按钮 */
+.mobile-device .chat-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 76px; /* 避免与底部导航重叠 */
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 90;
+}
+
+/* 移动设备下的统计卡片网格布局优化 */
+.mobile-device .stats-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* 移动设备下的任务项和目标项样式优化 */
+.mobile-device .task-item, 
+.mobile-device .goal-item {
+  padding: 10px 0;
+}
+
+.mobile-device .task-title,
+.mobile-device .goal-title {
+  font-size: 0.95rem;
+}
+
+.mobile-device .task-time,
+.mobile-device .goal-meta {
+  font-size: 0.75rem;
+}
+
+/* 针对iOS设备的底部安全区适配 */
+@supports (-webkit-touch-callout: none) {
+  .mobile-device .sidebar {
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+  
+  .mobile-device .page-content {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0));
+  }
+}

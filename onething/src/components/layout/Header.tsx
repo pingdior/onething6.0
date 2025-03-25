@@ -1,8 +1,12 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Avatar, Box } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import LanguageSwitcher from '../common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const Header: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <AppBar 
       position="sticky" 
@@ -23,9 +27,10 @@ const Header: React.FC = () => {
             color: '#4ECDC4'
           }}
         >
-          OneThing
+          {t('app.name')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <LanguageSwitcher />
           <IconButton size="small">
             <NotificationsIcon sx={{ color: '#6B7280' }} />
           </IconButton>
