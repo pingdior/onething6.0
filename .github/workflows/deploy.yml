@@ -10,10 +10,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
         node-version: '16'
         cache: 'npm'
@@ -29,11 +29,9 @@ jobs:
         CI=false npm run build
         
     - name: Install SSH key
-      uses: shimataro/ssh-key-action@v3
+      uses: webfactory/ssh-agent@v0.8.0
       with:
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        known_hosts: unnecessary
-        if_key_exists: replace
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
         
     - name: Adding Known Hosts
       run: |
@@ -44,9 +42,6 @@ jobs:
       
     - name: Deploy to Aliyun
       run: |
-        # 设置SSH密钥权限
-        chmod 600 ~/.ssh/id_rsa*
-        
         # 创建部署目录
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /var/www/onething"
         
