@@ -62,4 +62,5 @@ jobs:
           sed -i 's/MONGO_DB_NAME=.*/MONGO_DB_NAME=${{ secrets.MONGO_DB }}/' .env && \
           sed -i 's/MONGO_PASSWORD=.*/MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}/' .env && \
           sed -i 's/MONGO_USER=.*/MONGO_USER=${{ secrets.MONGO_USER }}/' .env && \
+          sed -i 's/PORT=.*/PORT=5005/' .env && \  # 添加此行设置端口
           pm2 restart onething || pm2 start server.js --name onething"
