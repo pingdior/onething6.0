@@ -47,7 +47,7 @@ jobs:
         
         # 压缩构建文件，提高传输效率
         cd onething
-        tar -czf build.tar.gz build server.js package.json package-lock.json .env.example
+        tar -czf build.tar.gz build server.js package.json package-lock.json .env.example schema/
         
         # 传输文件到服务器
         scp -o StrictHostKeyChecking=no build.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/onething/
