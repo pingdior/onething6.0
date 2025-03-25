@@ -10,10 +10,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '16'
         cache: 'npm'
@@ -29,29 +29,36 @@ jobs:
         CI=false npm run build
         
     - name: Install SSH key
-      uses: shimataro/ssh-key-action@v2
+      uses: shimataro/ssh-key-action@v3
       with:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         known_hosts: unnecessary
         if_key_exists: replace
         
     - name: Adding Known Hosts
-      run: ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        chmod 600 ~/.ssh/known_hosts
       
     - name: Deploy to Aliyun
       run: |
+        # 设置SSH密钥权限
+        chmod 600 ~/.ssh/id_rsa*
+        
         # 创建部署目录
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /var/www/onething"
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /var/www/onething"
         
         # 压缩构建文件，提高传输效率
         cd onething
         tar -czf build.tar.gz build server.js package.json package-lock.json .env.example
         
         # 传输文件到服务器
-        scp build.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/onething/
+        scp -o StrictHostKeyChecking=no build.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/onething/
         
         # 在服务器上解压并安装依赖，配置MongoDB
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /var/www/onething && \
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /var/www/onething && \
           tar -xzf build.tar.gz && \
           rm build.tar.gz && \
           npm install --production --legacy-peer-deps && \
