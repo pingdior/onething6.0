@@ -40,31 +40,31 @@ jobs:
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
         chmod 600 ~/.ssh/known_hosts
       
-        - name: Deploy to Aliyun
-        run: |
-          # 创建部署目录
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /var/www/onething"
-          
-          # 压缩构建文件，提高传输效率
-          cd onething
-          tar -czf build.tar.gz build server.js package.json package-lock.json .env.example schema/ ecosystem.config.js
-          
-          # 传输文件到服务器
-          scp -o StrictHostKeyChecking=no build.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/onething/
-          
-          # 在服务器上解压并安装依赖，配置MongoDB和环境变量
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /var/www/onething && \
-            tar -xzf build.tar.gz && \
-            rm build.tar.gz && \
-            npm install --production --legacy-peer-deps && \
-            cp .env.example .env && \
-            sed -i 's/MONGO_URL=.*/MONGO_URL=${{ secrets.MONGO_URL }}/' .env && \
-            sed -i 's/MONGO_DB_NAME=.*/MONGO_DB_NAME=${{ secrets.MONGO_DB }}/' .env && \
-            sed -i 's/MONGO_PASSWORD=.*/MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}/' .env && \
-            sed -i 's/MONGO_USER=.*/MONGO_USER=${{ secrets.MONGO_USER }}/' .env && \
-            sed -i 's/PORT=.*/PORT=5005/' .env && \
-            echo \"NODE_ENV=${{ secrets.NODE_ENV }}\" >> .env && \
-            cp ecosystem.config.js . && \
-            pm2 delete onething || true && \
-            pm2 start ecosystem.config.js --env production && \
-            pm2 save
+    - name: Deploy to Aliyun
+      run: |
+        # 创建部署目录
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /var/www/onething"
+        
+        # 压缩构建文件，提高传输效率
+        cd onething
+        tar -czf build.tar.gz build server.js package.json package-lock.json .env.example schema/ ecosystem.config.js
+        
+        # 传输文件到服务器
+        scp -o StrictHostKeyChecking=no build.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/onething/
+        
+        # 在服务器上解压并安装依赖，配置MongoDB和环境变量
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /var/www/onething && \
+          tar -xzf build.tar.gz && \
+          rm build.tar.gz && \
+          npm install --production --legacy-peer-deps && \
+          cp .env.example .env && \
+          sed -i 's/MONGO_URL=.*/MONGO_URL=${{ secrets.MONGO_URL }}/' .env && \
+          sed -i 's/MONGO_DB_NAME=.*/MONGO_DB_NAME=${{ secrets.MONGO_DB }}/' .env && \
+          sed -i 's/MONGO_PASSWORD=.*/MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}/' .env && \
+          sed -i 's/MONGO_USER=.*/MONGO_USER=${{ secrets.MONGO_USER }}/' .env && \
+          sed -i 's/PORT=.*/PORT=5005/' .env && \
+          echo \"NODE_ENV=${{ secrets.NODE_ENV }}\" >> .env && \
+          cp ecosystem.config.js . && \
+          pm2 delete onething || true && \
+          pm2 start ecosystem.config.js --env production && \
+          pm2 save
