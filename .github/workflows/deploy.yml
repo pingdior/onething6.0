@@ -67,4 +67,4 @@ jobs:
           cp ecosystem.config.js . && \
           pm2 delete onething || true && \
           pm2 start ecosystem.config.js --env production && \
-          pm2 save
+          pm2 save"
