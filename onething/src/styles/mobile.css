@@ -60,7 +60,7 @@
 
 /* 移动端隐藏侧边栏 */
 .mobile-device .sidebar {
-    display: none;
+    display: none !important;
 }
 
 /* 移动端内容区域 */
@@ -310,6 +310,12 @@
 .mobile-device .bottom-nav-center svg {
     stroke: white;
     margin-bottom: 0;
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* 移动端AI聊天按钮 */

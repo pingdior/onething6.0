@@ -58,10 +58,22 @@ const MobileBottomNav: React.FC = () => {
       />
       <div className="bottom-nav-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
         </svg>
       </div>
+      <NavItem 
+        path="/companion" 
+        current={currentPath} 
+        icon={
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        } 
+        label="对话" 
+      />
       <NavItem 
         path="/emotions" 
         current={currentPath} 
@@ -195,7 +207,6 @@ const App: React.FC = () => {
           {/* 主应用路由 */}
           <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/welcome" />} />
           <Route path="/goals" element={isLoggedIn ? <Goals /> : <Navigate to="/welcome" />} />
-          <Route path="/tasks" element={isLoggedIn ? <Tasks /> : <Navigate to="/welcome" />} />
           <Route path="/emotions" element={isLoggedIn ? <Emotions /> : <Navigate to="/welcome" />} />
           <Route path="/review" element={isLoggedIn ? <Review /> : <Navigate to="/welcome" />} />
           <Route path="/companion" element={isLoggedIn ? <Companion /> : <Navigate to="/welcome" />} />

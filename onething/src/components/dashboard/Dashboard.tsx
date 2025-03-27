@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Box, Grid, Paper, Typography, CircularProgress, LinearProgress,
-  List, ListItem, ListItemText, Divider, Card, CardContent 
+  List, ListItem, ListItemText, Divider, Card, CardContent, Button
 } from '@mui/material';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
 import GoalProgressChart from '../goals/GoalProgressChart';
 import TimeHeatmapChart from '../review/TimeHeatmapChart';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 
 // 统计卡片组件
 const StatsCard: React.FC<{
@@ -79,6 +83,42 @@ const formatDate = (dateString: string): string => {
     month: 'long', 
     day: 'numeric' 
   });
+};
+
+// 在合适的位置添加复盘入口
+const DashboardReviewSection = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <Card sx={{ mb: 2, borderRadius: 3 }}>
+      <CardContent>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: '#1A535C' }}>
+            {t('review.title')}
+          </Typography>
+          <AssessmentIcon sx={{ color: '#4ECDC4' }} />
+        </Box>
+        <Divider sx={{ my: 1.5 }} />
+        <Typography variant="body2" sx={{ mb: 2, color: '#6B7280' }}>
+          {t('review.dashboardDescription')}
+        </Typography>
+        <Button 
+          component={Link} 
+          to="/review" 
+          variant="outlined" 
+          color="primary"
+          endIcon={<ArrowForwardIcon />}
+          sx={{ 
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 500
+          }}
+        >
+          {t('review.goToReview')}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 };
 
 const Dashboard: React.FC = () => {
@@ -247,6 +287,9 @@ const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+      
+      {/* 添加复盘入口 */}
+      <DashboardReviewSection />
     </Box>
   );
 };

@@ -3,9 +3,11 @@ import { AppBar, Toolbar, Typography, IconButton, Avatar, Box } from '@mui/mater
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { isMobile } from '../../i18n';
 
 const Header: React.FC = () => {
   const { t } = useTranslation();
+  const isOnMobile = isMobile();
   
   return (
     <AppBar 
@@ -30,7 +32,7 @@ const Header: React.FC = () => {
           {t('app.name')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <LanguageSwitcher />
+          {!isOnMobile && <LanguageSwitcher />}
           <IconButton size="small">
             <NotificationsIcon sx={{ color: '#6B7280' }} />
           </IconButton>

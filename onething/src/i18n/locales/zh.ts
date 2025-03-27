@@ -1,7 +1,7 @@
 export default {
   // 通用
   app: {
-    name: 'OneThing',
+    name: 'onething-你的目标达成伙伴',
     tagline: '你的AI智能目标管理助手',
   },
   
@@ -9,10 +9,9 @@ export default {
   nav: {
     dashboard: '首页',
     goals: '目标',
-    tasks: '任务',
+    companion: '对话',
     emotions: '情绪',
     review: '复盘',
-    companion: 'AI伙伴',
     settings: '设置',
     help: '帮助',
   },
@@ -74,6 +73,9 @@ export default {
   
   // 复盘页面
   review: {
+    title: '复盘分析',
+    dashboardDescription: '通过复盘分析，查看您的目标完成情况和效率分析',
+    goToReview: '进入复盘',
     weekly: '周',
     monthly: '月',
     goalsOverview: '目标概览',
