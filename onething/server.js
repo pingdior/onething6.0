@@ -20,9 +20,36 @@ const serviceStatus = {
 
 console.log(`准备在端口 ${PORT} 上启动服务器...`);
 
+// 配置更强大的CORS设置，确保移动端请求不被拒绝
+const corsOptions = {
+  origin: function (origin, callback) {
+    // 允许所有源访问，包括移动端请求
+    callback(null, true);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+  credentials: true,
+  maxAge: 86400 // 预检请求结果缓存24小时
+};
+
 // 启用CORS和JSON请求体解析
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
+
+// 为所有响应添加必要的CORS头
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // 处理 OPTIONS 请求
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // 为生产环境提供静态文件
 if (process.env.NODE_ENV === 'production') {

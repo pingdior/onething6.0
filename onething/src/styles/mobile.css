@@ -1,0 +1,359 @@
+/* 移动端专用样式 - 基于minionething.html设计 */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+/* 仅在移动设备上应用这些样式 */
+.mobile-device {
+    /* 移动端变量设置 */
+    --device-width: 100%;
+    --header-height: 56px;
+    --content-padding: 16px;
+    --bottom-nav-height: 56px;
+    --card-border-radius: 16px;
+    --button-height: 44px;
+    
+    /* 字体设置 */
+    --heading-font: 'Montserrat', 'Noto Sans SC', sans-serif;
+    --body-font: 'Noto Sans SC', sans-serif;
+    
+    /* 基础样式覆盖 */
+    font-family: var(--body-font);
+    -webkit-tap-highlight-color: transparent;
+    font-size: 14px;
+}
+
+/* 移动端布局覆盖 */
+.mobile-device .app-container {
+    max-width: 100%;
+    padding: 0;
+    box-shadow: none;
+}
+
+/* 移动端头部样式 */
+.mobile-device .header {
+    height: var(--header-height);
+    padding: 0 var(--content-padding);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--white);
+}
+
+.mobile-device .logo {
+    font-size: 1.25rem;
+}
+
+.mobile-device .logo svg {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}
+
+.mobile-device .header-right {
+    gap: 12px;
+}
+
+.mobile-device .avatar {
+    width: 36px;
+    height: 36px;
+}
+
+/* 移动端隐藏侧边栏 */
+.mobile-device .sidebar {
+    display: none;
+}
+
+/* 移动端内容区域 */
+.mobile-device .main-content {
+    flex-direction: column;
+}
+
+.mobile-device .content {
+    flex-direction: column;
+    overflow: visible;
+}
+
+.mobile-device .page-content {
+    padding: 10px var(--content-padding) calc(var(--bottom-nav-height) + 30px);
+    max-height: none;
+    overflow-y: visible;
+}
+
+/* 移动端卡片样式 */
+.mobile-device .card {
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+/* 移动端按钮样式 */
+.mobile-device .btn {
+    height: var(--button-height);
+    padding: 0 16px;
+    border-radius: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    font-size: 0.9rem;
+}
+
+.mobile-device .btn-sm {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+
+/* 移动端统计网格 */
+.mobile-device .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.mobile-device .stat-item {
+    text-align: center;
+    padding: 8px 4px;
+}
+
+.mobile-device .stat-label {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    margin-bottom: 2px;
+}
+
+.mobile-device .stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--tertiary-color);
+    margin-bottom: 2px;
+}
+
+.mobile-device .stat-desc {
+    font-size: 0.7rem;
+    color: var(--gray-500);
+}
+
+/* 移动端任务项样式 */
+.mobile-device .task-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.mobile-device .task-checkbox {
+    margin-right: 12px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-300);
+    appearance: none;
+    background-color: white;
+    position: relative;
+}
+
+.mobile-device .task-checkbox:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.mobile-device .task-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.mobile-device .task-content {
+    flex: 1;
+}
+
+.mobile-device .task-time {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+}
+
+.mobile-device .task-title {
+    font-weight: 500;
+    margin: 2px 0;
+    font-size: 0.95rem;
+}
+
+.mobile-device .task-source {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* 移动端进度条样式 */
+.mobile-device .progress-bar {
+    height: 8px;
+    background-color: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mobile-device .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, 
+        var(--secondary-color) 0%, 
+        var(--primary-color) 50%, 
+        var(--tertiary-color) 100%);
+    border-radius: 4px;
+}
+
+/* 移动端情绪网格 */
+.mobile-device .emotion-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.mobile-device .emotion-item {
+    aspect-ratio: 1/1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gray-100);
+    border-radius: 12px;
+}
+
+.mobile-device .emotion-item.selected,
+.mobile-device .emotion-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.mobile-device .emotion-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.mobile-device .emotion-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* 移动端底部导航 */
+.mobile-device .bottom-nav {
+    height: var(--bottom-nav-height);
+    background-color: var(--white);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-top: 1px solid var(--gray-200);
+}
+
+.mobile-device .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: var(--bottom-nav-height);
+    color: var(--gray-500);
+    font-size: 0.7rem;
+    padding: 6px 0;
+}
+
+.mobile-device .bottom-nav-item.active {
+    color: var(--primary-color);
+}
+
+.mobile-device .bottom-nav-item svg {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 4px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.mobile-device .bottom-nav-text {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* 移动端底部中心按钮 */
+.mobile-device .bottom-nav-center {
+    transform: translateY(-15px);
+    background-color: var(--primary-color);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+}
+
+.mobile-device .bottom-nav-center svg {
+    stroke: white;
+    margin-bottom: 0;
+}
+
+/* 移动端AI聊天按钮 */
+.mobile-device .ai-chat-button {
+    position: fixed;
+    bottom: calc(var(--bottom-nav-height) + 20px);
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    z-index: 90;
+}
+
+/* AI连接错误提示 */
+.mobile-device .ai-service-error {
+    position: fixed;
+    top: calc(var(--header-height) + 10px);
+    left: 16px;
+    right: 16px;
+    background-color: var(--danger-color);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+    box-shadow: var(--shadow);
+}
+
+.mobile-device .ai-service-error-icon {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.mobile-device .ai-service-error-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+} 
