@@ -93,9 +93,32 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
     
     throw new Error('无效的API响应格式');
   } catch (error: any) {
-    console.error('AI通信错误详情:', error);
+    console.error('AI通信错误:', error);
     
-    // 默认错误信息
+    // 针对移动端的特殊处理
+    if (/mobile|android|iphone/i.test(navigator.userAgent)) {
+      console.log('检测到移动设备，尝试替代请求方式');
+      try {
+        // 使用与原始请求相同的数据
+        const originalRequestData = { 
+          model: API_CONFIG.model,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1000
+        };
+        
+        // 使用简化的fetch请求再试一次
+        const simpleResponse = await fetch(`${window.location.origin}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(originalRequestData)
+        });
+        // 处理响应...
+      } catch (retryError) {
+        console.error('移动端重试也失败:', retryError);
+      }
+    }
+    
     throw new Error(`与AI助手通信时出错: ${error.message || '未知错误'}`);
   }
 };
@@ -277,6 +300,23 @@ export const autoBreakdownGoal = async (goal: string, description: string): Prom
     console.error('目标分解出错:', error);
     throw new Error(`目标分解失败: ${error.message || '未知错误'}`);
   }
+};
+
+// 修改isMobile函数
+export const isMobile = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const mobileKeywords = ['android', 'iphone', 'ipod', 'ipad', 'windows phone', 'mobile'];
+  
+  const isMobileDevice = mobileKeywords.some(keyword => userAgent.includes(keyword)) || 
+    (window.innerWidth <= 768) || 
+    ('ontouchstart' in window);
+  
+  // 强制添加移动设备标记
+  if (isMobileDevice && document.body) {
+    document.body.classList.add('mobile-device');
+  }
+  
+  return isMobileDevice;
 };
 
 export default {

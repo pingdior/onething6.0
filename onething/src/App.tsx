@@ -202,6 +202,7 @@ const App: React.FC = () => {
           {/* 主应用路由 */}
           <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/welcome" />} />
           <Route path="/goals" element={isLoggedIn ? <Goals /> : <Navigate to="/welcome" />} />
+          <Route path="/tasks" element={isLoggedIn ? <Tasks /> : <Navigate to="/welcome" />} />
           <Route path="/emotions" element={isLoggedIn ? <Emotions /> : <Navigate to="/welcome" />} />
           <Route path="/review" element={isLoggedIn ? <Review /> : <Navigate to="/welcome" />} />
           <Route path="/companion" element={isLoggedIn ? <Companion /> : <Navigate to="/welcome" />} />

@@ -23,9 +23,11 @@ console.log(`准备在端口 ${PORT} 上启动服务器...`);
 
 // 配置更强大的CORS设置，确保移动端请求不被拒绝
 const corsOptions = {
-  origin: '*',  // 开发环境可设为*，生产环境应限制来源
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  credentials: false,
+  maxAge: 86400 // 24小时
 };
 
 // 启用CORS和JSON请求体解析

@@ -382,4 +382,18 @@ body.mobile-device .sidebar,
     border: none;
     color: white;
     font-size: 1.2rem;
+}
+
+/* 在mobile.css文件中添加 */
+html body.mobile-device .sidebar,
+html body.mobile-device nav:not(.bottom-nav),
+html body.mobile-device aside,
+html body.mobile-device [class*="sidebar"],
+html body.mobile-device [class*="drawer"],
+html body.mobile-device [class*="nav-menu"],
+html body.mobile-device .MuiDrawer-root {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  /* 其他属性... */
 } 
