@@ -83,7 +83,7 @@ const MobileBottomNav: React.FC = () => {
         label="情绪" 
       />
       <NavItem 
-        path="/profile" 
+        path="/settings"
         current={currentPath} 
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -107,8 +107,16 @@ interface NavItemProps {
 
 // 导航项组件
 const NavItem: React.FC<NavItemProps> = ({ path, current, icon, label }) => {
+  const navigate = useNavigate();
+  
+  // 使用navigate函数进行跳转，而不是直接用a标签
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(path);
+  };
+  
   return (
-    <a href={path} className={`bottom-nav-item ${current === path ? 'active' : ''}`}>
+    <a href={path} onClick={handleClick} className={`bottom-nav-item ${current === path ? 'active' : ''}`}>
       {icon}
       <span className="bottom-nav-text">{label}</span>
     </a>

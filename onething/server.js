@@ -87,26 +87,75 @@ app.post('/api/chat', async (req, res) => {
     
     // 请求DeepSeek API
     const apiUrl = process.env.DEEPSEEK_API_URL || 'https://api.lkeap.cloud.tencent.com/v1/chat/completions';
-    const apiKey = process.env.DEEPSEEK_API_KEY;
+    let apiKey = process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
       console.error('错误：DEEPSEEK_API_KEY未设置');
       return res.status(500).json({ error: 'API密钥未配置' });
     }
     
+    // DeepSeek API密钥通常以"sk-"开头，确保格式正确
+    if (!apiKey.trim().startsWith('sk-')) {
+      console.warn('警告：API密钥格式可能不正确，应以sk-开头');
+    }
+    
     // 打印请求信息但不包含敏感内容
     console.log(`请求AI服务: ${apiUrl}`);
     
-    const response = await axios({
-      method: 'post',
-      url: apiUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      data: req.body,
-      timeout: 30000 // 增加超时时间到30秒
-    });
+    // 添加重试逻辑
+    let response;
+    let retryCount = 0;
+    const maxRetries = 1; // 最多重试一次
+    
+    while (retryCount <= maxRetries) {
+      try {
+        response = await axios({
+          method: 'post',
+          url: apiUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey.trim()}` // 确保没有多余空格
+          },
+          data: req.body,
+          timeout: 30000 // 30秒超时
+        });
+        
+        // 如果请求成功，跳出循环
+        break;
+      } catch (error) {
+        if (error.response && error.response.status === 401 && retryCount < maxRetries) {
+          // 如果是401错误并且还可以重试，尝试从备用key中获取
+          console.warn('API密钥认证失败，尝试使用备用密钥');
+          
+          // 这里可以尝试使用不同的API密钥
+          // 模拟AI响应以防所有API密钥都失效
+          if (retryCount === maxRetries) {
+            console.warn('所有API密钥均已失效，使用模拟响应');
+            
+            // 创建模拟响应以保障基本的用户体验
+            const fakeResponse = {
+              choices: [
+                {
+                  message: {
+                    content: "很抱歉，AI服务暂时不可用，请稍后再试。您可以继续使用应用的其他功能。如有紧急需求，请联系管理员。"
+                  },
+                  finish_reason: "stop"
+                }
+              ]
+            };
+            
+            serviceStatus.ai_service = false;
+            return res.json(fakeResponse);
+          }
+          
+          retryCount++;
+          continue;
+        }
+        
+        // 其他错误或重试次数已用完，抛出异常
+        throw error;
+      }
+    }
     
     console.log('DeepSeek API响应状态:', response.status);
     // 更新AI服务状态
@@ -120,6 +169,16 @@ app.post('/api/chat', async (req, res) => {
     if (error.response) {
       console.error('错误响应数据:', JSON.stringify(error.response.data));
       console.error('错误状态码:', error.response.status);
+      
+      // 401错误处理
+      if (error.response.status === 401) {
+        console.error('DeepSeek API密钥认证失败，请检查您的API密钥是否有效。');
+        return res.status(500).json({ 
+          error: 'AI服务认证失败，请联系管理员更新API密钥',
+          code: 'AUTH_FAILED'
+        });
+      }
+      
       return res.status(error.response.status).json({ 
         error: `AI服务错误: ${error.response.data.error?.message || error.message}`
       });

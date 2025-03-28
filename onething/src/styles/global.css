@@ -50,6 +50,32 @@
     --text-secondary: #4B5563;
 }
 
+/* 设备类型特定样式 - 确保这些规则优先级较高 */
+/* 仅在桌面版上隐藏特定模块 */
+body.desktop-device [class*="review.title"],
+body.desktop-device [class*="goals.summary"],
+body.desktop-device .review-module,
+body.desktop-device .goals-summary-module,
+html.desktop-device [class*="review.title"],
+html.desktop-device [class*="goals.summary"],
+html.desktop-device .review-module,
+html.desktop-device .goals-summary-module {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 确保移动端正常显示 */
+body.mobile-device [class*="review.title"],
+body.mobile-device [class*="goals.summary"],
+html.mobile-device [class*="review.title"],
+html.mobile-device [class*="goals.summary"] {
+  display: block !important;
+  visibility: visible !important;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -642,18 +668,4 @@ body {
     .md\:pl-4 {
         padding-left: 1rem;
     }
-}
-
-/* 添加以下CSS规则 - 仅在web版上隐藏特定模块 */
-.desktop-device [class*="review.title"],
-.desktop-device [class*="goals.summary"],
-.desktop-device .review-module,
-.desktop-device .goals-summary-module {
-  display: none !important;
-}
-
-/* 确保移动端正常显示 */
-.mobile-device [class*="review.title"],
-.mobile-device [class*="goals.summary"] {
-  display: block;
 } 

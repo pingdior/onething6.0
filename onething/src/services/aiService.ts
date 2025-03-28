@@ -72,49 +72,72 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
     
     console.log('正在连接API服务:', fullUrl);
     
-    // 使用我们的自定义代理服务器
-    const response = await fetch(fullUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(requestData),
-      // 增加超时处理
-      signal: AbortSignal.timeout(15000) // 15秒超时
-    });
+    // 使用异步等待机制，添加10秒的超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
     
-    console.log('代理响应状态:', response.status);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP错误! 状态码: ${response.status}, 状态: ${response.statusText}`);
-    }
-    
-    const responseData = await response.json();
-    console.log('代理响应数据:', responseData);
+    try {
+      // 使用我们的自定义代理服务器
+      const response = await fetch(fullUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData),
+        signal: controller.signal
+      });
+      
+      // 清除超时
+      clearTimeout(timeoutId);
+      
+      console.log('代理响应状态:', response.status);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('API身份认证失败，请联系管理员更新API密钥');
+        } else if (response.status === 429) {
+          throw new Error('API请求过于频繁，请稍后再试');
+        } else {
+          throw new Error(`HTTP错误! 状态码: ${response.status}, 状态: ${response.statusText}`);
+        }
+      }
+      
+      const responseData = await response.json();
+      console.log('代理响应数据:', responseData);
 
-    // 从响应中提取AI的回复
-    if (responseData && 
-        responseData.choices && 
-        responseData.choices.length > 0 && 
-        responseData.choices[0].message) {
-      return responseData.choices[0].message.content;
+      // 从响应中提取AI的回复
+      if (responseData && 
+          responseData.choices && 
+          responseData.choices.length > 0 && 
+          responseData.choices[0].message) {
+        return responseData.choices[0].message.content;
+      }
+      
+      // 检查响应格式
+      console.error('API响应格式不符合预期:', responseData);
+      
+      // 如果有错误信息
+      if (responseData.error) {
+        throw new Error(`API错误: ${responseData.error.message || '未知错误'}`);
+      }
+      
+      throw new Error('无效的API响应格式');
+    } catch (error: any) {
+      // 清除超时
+      clearTimeout(timeoutId);
+      throw error;
     }
-    
-    // 检查响应格式
-    console.error('API响应格式不符合预期:', responseData);
-    
-    // 如果有错误信息
-    if (responseData.error) {
-      throw new Error(`API错误: ${responseData.error.message || '未知错误'}`);
-    }
-    
-    throw new Error('无效的API响应格式');
   } catch (error: any) {
     console.error('AI通信错误:', error);
     
+    // 处理AbortError（超时）
+    if (error.name === 'AbortError') {
+      console.error('请求超时已中止');
+    }
+    
     // 针对移动端的特殊处理 - 使用更简化的重试方式
-    if (/mobile|android|iphone/i.test(navigator.userAgent)) {
+    if (isMobile()) {
       console.log('检测到移动设备，尝试替代请求方式');
       try {
         // 使用与原始请求相同的数据
@@ -125,36 +148,52 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
           max_tokens: 1000
         };
         
-        // 使用简化的fetch请求再试一次，显式指定完整URL
-        const origin = window.location.origin;
-        const simpleResponse = await fetch(`${origin}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(originalRequestData),
-          // 不使用缓存，强制新请求
-          cache: 'no-store'
-        });
+        // 创建新的AbortController和超时
+        const retryController = new AbortController();
+        const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
         
-        if (!simpleResponse.ok) {
-          throw new Error(`重试失败! 状态码: ${simpleResponse.status}`);
+        try {
+          // 使用简化的fetch请求再试一次，显式指定完整URL
+          const origin = window.location.origin;
+          const simpleResponse = await fetch(`${origin}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(originalRequestData),
+            signal: retryController.signal,
+            // 不使用缓存，强制新请求
+            cache: 'no-store'
+          });
+          
+          // 清除超时
+          clearTimeout(retryTimeoutId);
+          
+          if (!simpleResponse.ok) {
+            throw new Error(`重试失败! 状态码: ${simpleResponse.status}`);
+          }
+          
+          const retryData = await simpleResponse.json();
+          if (retryData && 
+              retryData.choices && 
+              retryData.choices.length > 0 && 
+              retryData.choices[0].message) {
+            return retryData.choices[0].message.content;
+          }
+          
+          throw new Error('重试后响应格式依然无效');
+        } catch (retryErr) {
+          // 清除超时
+          clearTimeout(retryTimeoutId);
+          throw retryErr;
         }
-        
-        const retryData = await simpleResponse.json();
-        if (retryData && 
-            retryData.choices && 
-            retryData.choices.length > 0 && 
-            retryData.choices[0].message) {
-          return retryData.choices[0].message.content;
-        }
-        
-        throw new Error('重试后响应格式依然无效');
       } catch (retryError: any) {
         console.error('移动端重试也失败:', retryError);
-        throw new Error(`与AI助手通信失败: ${retryError.message || '未知错误'}`);
+        // 返回备用响应而不是抛出错误，以防止应用崩溃
+        return "很抱歉，我暂时无法回复。与AI助手通信时出现问题，请检查您的网络连接或稍后再试。";
       }
     }
     
-    throw new Error(`与AI助手通信时出错: ${error.message || '未知错误'}`);
+    // 返回备用响应而不是抛出错误，以防止应用崩溃
+    return `抱歉，我暂时无法连接到AI服务。请稍后再试或联系管理员检查API设置。${error.message ? `(错误: ${error.message})` : ""}`;
   }
 };
 
