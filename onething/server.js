@@ -78,6 +78,26 @@ app.post('/api/chat', async (req, res) => {
   try {
     console.log('收到前端请求:', JSON.stringify(req.body).substring(0, 200) + '...');
     
+    // 检查是否开启模拟响应模式
+    const useMockResponse = process.env.USE_MOCK_AI_RESPONSE === 'true';
+    if (useMockResponse) {
+      console.log('使用模拟AI响应模式');
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              content: "这是一个模拟的AI响应。系统管理员已开启了模拟模式，AI功能将返回预设回复。请联系管理员恢复正常服务。",
+              role: "assistant"
+            },
+            finish_reason: "stop"
+          }
+        ]
+      };
+      // 延迟500ms模拟网络延迟
+      await new Promise(r => setTimeout(r, 500));
+      return res.json(mockResponse);
+    }
+    
     // 验证请求数据
     if (!req.body || !req.body.messages || !Array.isArray(req.body.messages)) {
       return res.status(400).json({ 
@@ -105,7 +125,7 @@ app.post('/api/chat', async (req, res) => {
     // 添加重试逻辑
     let response;
     let retryCount = 0;
-    const maxRetries = 1; // 最多重试一次
+    const maxRetries = 2; // 增加到最多重试两次
     
     while (retryCount <= maxRetries) {
       try {
@@ -125,11 +145,10 @@ app.post('/api/chat', async (req, res) => {
       } catch (error) {
         if (error.response && error.response.status === 401 && retryCount < maxRetries) {
           // 如果是401错误并且还可以重试，尝试从备用key中获取
-          console.warn('API密钥认证失败，尝试使用备用密钥');
+          console.warn(`API密钥认证失败，尝试使用备用密钥(尝试${retryCount + 1}/${maxRetries})`);
           
-          // 这里可以尝试使用不同的API密钥
           // 模拟AI响应以防所有API密钥都失效
-          if (retryCount === maxRetries) {
+          if (retryCount === maxRetries - 1) {
             console.warn('所有API密钥均已失效，使用模拟响应');
             
             // 创建模拟响应以保障基本的用户体验
@@ -137,7 +156,8 @@ app.post('/api/chat', async (req, res) => {
               choices: [
                 {
                   message: {
-                    content: "很抱歉，AI服务暂时不可用，请稍后再试。您可以继续使用应用的其他功能。如有紧急需求，请联系管理员。"
+                    content: "很抱歉，AI服务暂时不可用，请稍后再试。您可以继续使用应用的其他功能。如有紧急需求，请联系管理员。",
+                    role: "assistant"
                   },
                   finish_reason: "stop"
                 }
@@ -166,6 +186,19 @@ app.post('/api/chat', async (req, res) => {
     // 更新AI服务状态
     serviceStatus.ai_service = false;
     
+    // 提供降级体验
+    const fallbackResponse = {
+      choices: [
+        {
+          message: {
+            content: "非常抱歉，AI服务目前无法连接。这可能是网络问题或服务暂时不可用。请稍后再试，或查看应用其他功能。",
+            role: "assistant"
+          },
+          finish_reason: "stop"
+        }
+      ]
+    };
+    
     if (error.response) {
       console.error('错误响应数据:', JSON.stringify(error.response.data));
       console.error('错误状态码:', error.response.status);
@@ -173,36 +206,21 @@ app.post('/api/chat', async (req, res) => {
       // 401错误处理
       if (error.response.status === 401) {
         console.error('DeepSeek API密钥认证失败，请检查您的API密钥是否有效。');
-        return res.status(500).json({ 
-          error: 'AI服务认证失败，请联系管理员更新API密钥',
-          code: 'AUTH_FAILED'
-        });
+        return res.json(fallbackResponse); // 返回降级响应而非错误状态
       }
       
-      return res.status(error.response.status).json({ 
-        error: `AI服务错误: ${error.response.data.error?.message || error.message}`
-      });
+      return res.json(fallbackResponse); // 返回降级响应而非错误状态
     }
     
-    // 针对网络错误提供更详细的信息
-    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-      return res.status(503).json({ 
-        error: '无法连接到AI服务，服务可能暂时不可用',
-        code: error.code
-      });
+    // 网络错误也返回降级响应
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || 
+        error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
+      console.error(`网络错误: ${error.code}`);
+      return res.json(fallbackResponse);
     }
     
-    if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
-      return res.status(504).json({ 
-        error: 'AI服务请求超时，服务可能过载',
-        code: error.code 
-      });
-    }
-    
-    res.status(500).json({ 
-      error: `与AI服务通信失败: ${error.message}`,
-      code: error.code || 'UNKNOWN'
-    });
+    // 其他所有错误都返回降级响应
+    res.json(fallbackResponse);
   }
 });
 

@@ -13,6 +13,8 @@ interface Goal {
   progress: number;
 }
 
+// 完全移除目标摘要部分或设置为不可见
+/* 旧代码保留为注释
 const GoalsSummarySection = () => {
   const { t } = useTranslation();
   // 使用示例目标数据或从您的状态管理获取
@@ -75,11 +77,9 @@ const GoalsSummarySection = () => {
     </Card>
   );
 };
+*/
 
 const Dashboard: React.FC = () => {
-  // 检测是否为移动设备
-  const isMobileDevice = isMobile();
-  
   return (
     <AppLayout>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -96,8 +96,7 @@ const Dashboard: React.FC = () => {
         
         <Box sx={{ flex: 1 }}>
           <DashboardComponent />
-          {/* 只在移动设备上显示目标摘要部分 */}
-          {isMobileDevice && <GoalsSummarySection />}
+          {/* 完全移除目标摘要部分 */}
         </Box>
       </Box>
     </AppLayout>

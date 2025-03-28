@@ -86,8 +86,13 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-// 在合适的位置添加复盘入口
+// 在合适的位置添加复盘入口 - 仅在必要时显示
 const DashboardReviewSection = () => {
+  // 从代码中完全移除此组件的显示
+  return null;
+  
+  // 原始代码注释掉
+  /*
   const { t } = useTranslation();
   
   return (
@@ -120,6 +125,7 @@ const DashboardReviewSection = () => {
       </CardContent>
     </Card>
   );
+  */
 };
 
 const Dashboard: React.FC = () => {
