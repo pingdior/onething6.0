@@ -4,6 +4,7 @@ import AppLayout from '../components/layout/AppLayout';
 import DashboardComponent from '../components/dashboard/Dashboard';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { isMobile } from '../i18n'; // 导入isMobile函数
 
 // 为GoalsSummarySection组件添加类型定义
 interface Goal {
@@ -76,6 +77,9 @@ const GoalsSummarySection = () => {
 };
 
 const Dashboard: React.FC = () => {
+  // 检测是否为移动设备
+  const isMobileDevice = isMobile();
+  
   return (
     <AppLayout>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -92,7 +96,8 @@ const Dashboard: React.FC = () => {
         
         <Box sx={{ flex: 1 }}>
           <DashboardComponent />
-          <GoalsSummarySection />
+          {/* 只在移动设备上显示目标摘要部分 */}
+          {isMobileDevice && <GoalsSummarySection />}
         </Box>
       </Box>
     </AppLayout>

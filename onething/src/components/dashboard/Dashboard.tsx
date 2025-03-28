@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import { isMobile } from '../../i18n'; // 导入isMobile函数
 
 // 统计卡片组件
 const StatsCard: React.FC<{
@@ -129,6 +130,9 @@ const Dashboard: React.FC = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
   const [priorityGoal, setPriorityGoal] = useState<any>(null);
+  
+  // 检测是否为移动设备
+  const isMobileDevice = isMobile();
   
   useEffect(() => {
     // 计算整体目标完成率
@@ -288,8 +292,8 @@ const Dashboard: React.FC = () => {
         </Grid>
       </Grid>
       
-      {/* 添加复盘入口 */}
-      <DashboardReviewSection />
+      {/* 只在移动设备上显示复盘入口 */}
+      {isMobileDevice && <DashboardReviewSection />}
     </Box>
   );
 };

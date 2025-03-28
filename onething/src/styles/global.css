@@ -642,4 +642,18 @@ body {
     .md\:pl-4 {
         padding-left: 1rem;
     }
+}
+
+/* 添加以下CSS规则 */
+.desktop-device [class*="review.title"],
+.desktop-device [class*="goals.summary"],
+.desktop-device .review-module,
+.desktop-device .goals-summary-module {
+  display: none !important;
+}
+
+/* 确保移动端正常显示 */
+.mobile-device [class*="review.title"],
+.mobile-device [class*="goals.summary"] {
+  display: block;
 } 

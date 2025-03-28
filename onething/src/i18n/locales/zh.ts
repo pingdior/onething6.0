@@ -5,6 +5,18 @@ export default {
     tagline: '你的AI智能目标管理助手',
   },
   
+  // 通用操作和文本
+  common: {
+    viewAll: '查看全部',
+    loading: '加载中...',
+    empty: '暂无数据',
+    error: '出错了',
+    retry: '重试',
+    success: '成功',
+    confirm: '确认',
+    cancel: '取消',
+  },
+  
   // 导航菜单
   nav: {
     dashboard: '首页',
