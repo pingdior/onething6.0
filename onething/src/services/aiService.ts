@@ -34,6 +34,13 @@ export interface AIResponse {
 }
 
 /**
+ * 检测当前设备是否为移动设备
+ */
+export const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+/**
  * 发送消息到DeepSeek API并获取响应
  */
 export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
@@ -51,7 +58,16 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
     console.log('请求数据:', JSON.stringify(requestData));
     
     // 构建完整URL，确保在不同环境下都能正确连接
-    const baseUrl = getBaseUrl();
+    let baseUrl = getBaseUrl();
+    
+    // 检测移动设备并使用绝对URL
+    const isMobileDevice = isMobile();
+    if (isMobileDevice) {
+      // 在移动设备上使用当前窗口的origin作为基础URL
+      baseUrl = window.location.origin;
+      console.log('检测到移动设备，使用origin作为基础URL:', baseUrl);
+    }
+    
     const fullUrl = `${baseUrl}${API_CONFIG.proxyURL}`;
     
     console.log('正在连接API服务:', fullUrl);
@@ -63,7 +79,9 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(requestData)
+      body: JSON.stringify(requestData),
+      // 增加超时处理
+      signal: AbortSignal.timeout(15000) // 15秒超时
     });
     
     console.log('代理响应状态:', response.status);
@@ -95,7 +113,7 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
   } catch (error: any) {
     console.error('AI通信错误:', error);
     
-    // 针对移动端的特殊处理
+    // 针对移动端的特殊处理 - 使用更简化的重试方式
     if (/mobile|android|iphone/i.test(navigator.userAgent)) {
       console.log('检测到移动设备，尝试替代请求方式');
       try {
@@ -107,15 +125,32 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
           max_tokens: 1000
         };
         
-        // 使用简化的fetch请求再试一次
-        const simpleResponse = await fetch(`${window.location.origin}/api/chat`, {
+        // 使用简化的fetch请求再试一次，显式指定完整URL
+        const origin = window.location.origin;
+        const simpleResponse = await fetch(`${origin}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(originalRequestData)
+          body: JSON.stringify(originalRequestData),
+          // 不使用缓存，强制新请求
+          cache: 'no-store'
         });
-        // 处理响应...
-      } catch (retryError) {
+        
+        if (!simpleResponse.ok) {
+          throw new Error(`重试失败! 状态码: ${simpleResponse.status}`);
+        }
+        
+        const retryData = await simpleResponse.json();
+        if (retryData && 
+            retryData.choices && 
+            retryData.choices.length > 0 && 
+            retryData.choices[0].message) {
+          return retryData.choices[0].message.content;
+        }
+        
+        throw new Error('重试后响应格式依然无效');
+      } catch (retryError: any) {
         console.error('移动端重试也失败:', retryError);
+        throw new Error(`与AI助手通信失败: ${retryError.message || '未知错误'}`);
       }
     }
     
@@ -300,23 +335,6 @@ export const autoBreakdownGoal = async (goal: string, description: string): Prom
     console.error('目标分解出错:', error);
     throw new Error(`目标分解失败: ${error.message || '未知错误'}`);
   }
-};
-
-// 修改isMobile函数
-export const isMobile = () => {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const mobileKeywords = ['android', 'iphone', 'ipod', 'ipad', 'windows phone', 'mobile'];
-  
-  const isMobileDevice = mobileKeywords.some(keyword => userAgent.includes(keyword)) || 
-    (window.innerWidth <= 768) || 
-    ('ontouchstart' in window);
-  
-  // 强制添加移动设备标记
-  if (isMobileDevice && document.body) {
-    document.body.classList.add('mobile-device');
-  }
-  
-  return isMobileDevice;
 };
 
 export default {

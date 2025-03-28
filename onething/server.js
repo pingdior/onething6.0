@@ -24,21 +24,22 @@ console.log(`准备在端口 ${PORT} 上启动服务器...`);
 // 配置更强大的CORS设置，确保移动端请求不被拒绝
 const corsOptions = {
   origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  credentials: false,
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
+  credentials: true,
   maxAge: 86400 // 24小时
 };
 
 // 启用CORS和JSON请求体解析
 app.use(cors(corsOptions));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
 
 // 为所有响应添加必要的CORS头
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin');
   res.header('Access-Control-Allow-Credentials', 'true');
   
   // 处理 OPTIONS 请求
@@ -75,29 +76,74 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/onething'
 // DeepSeek API代理
 app.post('/api/chat', async (req, res) => {
   try {
-    console.log('收到前端请求:', JSON.stringify(req.body));
+    console.log('收到前端请求:', JSON.stringify(req.body).substring(0, 200) + '...');
+    
+    // 验证请求数据
+    if (!req.body || !req.body.messages || !Array.isArray(req.body.messages)) {
+      return res.status(400).json({ 
+        error: '无效的请求格式，缺少messages字段或格式不正确' 
+      });
+    }
     
     // 请求DeepSeek API
+    const apiUrl = process.env.DEEPSEEK_API_URL || 'https://api.lkeap.cloud.tencent.com/v1/chat/completions';
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    
+    if (!apiKey) {
+      console.error('错误：DEEPSEEK_API_KEY未设置');
+      return res.status(500).json({ error: 'API密钥未配置' });
+    }
+    
+    // 打印请求信息但不包含敏感内容
+    console.log(`请求AI服务: ${apiUrl}`);
+    
     const response = await axios({
       method: 'post',
-      url: process.env.DEEPSEEK_API_URL,
+      url: apiUrl,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       data: req.body,
-      timeout: 30000 // 增加超时时间
+      timeout: 30000 // 增加超时时间到30秒
     });
     
     console.log('DeepSeek API响应状态:', response.status);
+    // 更新AI服务状态
+    serviceStatus.ai_service = true;
     res.json(response.data);
   } catch (error) {
     console.error('调用DeepSeek API出错:', error.message);
+    // 更新AI服务状态
+    serviceStatus.ai_service = false;
+    
     if (error.response) {
-      console.error('错误响应数据:', error.response.data);
+      console.error('错误响应数据:', JSON.stringify(error.response.data));
       console.error('错误状态码:', error.response.status);
+      return res.status(error.response.status).json({ 
+        error: `AI服务错误: ${error.response.data.error?.message || error.message}`
+      });
     }
-    res.status(500).json({ error: `与AI服务通信失败: ${error.message}` });
+    
+    // 针对网络错误提供更详细的信息
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      return res.status(503).json({ 
+        error: '无法连接到AI服务，服务可能暂时不可用',
+        code: error.code
+      });
+    }
+    
+    if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
+      return res.status(504).json({ 
+        error: 'AI服务请求超时，服务可能过载',
+        code: error.code 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: `与AI服务通信失败: ${error.message}`,
+      code: error.code || 'UNKNOWN'
+    });
   }
 });
 
