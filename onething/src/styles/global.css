@@ -644,7 +644,7 @@ body {
     }
 }
 
-/* 添加以下CSS规则 */
+/* 添加以下CSS规则 - 仅在web版上隐藏特定模块 */
 .desktop-device [class*="review.title"],
 .desktop-device [class*="goals.summary"],
 .desktop-device .review-module,
