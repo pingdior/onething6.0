@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Avatar, Box } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LanguageSwitcher from '../common/LanguageSwitcher';
@@ -8,6 +8,10 @@ import { isMobile } from '../../i18n';
 const Header: React.FC = () => {
   const { t } = useTranslation();
   const isOnMobile = isMobile();
+  
+  useEffect(() => {
+    document.title = t('app.name');
+  }, [t]);
   
   return (
     <AppBar 

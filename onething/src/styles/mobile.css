@@ -58,9 +58,29 @@
     height: 36px;
 }
 
-/* 移动端隐藏侧边栏 */
-.mobile-device .sidebar {
+/* 强化移动端隐藏侧边栏的样式 - 确保完全不可见 */
+.mobile-device .sidebar,
+body.mobile-device .sidebar,
+.mobile-device div[class*="sidebar"],
+.mobile-device aside,
+.mobile-device nav:not(.bottom-nav) {
     display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+/* 确保主内容区域占满宽度 */
+.mobile-device .main-content,
+.mobile-device div[class*="content"] {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
 }
 
 /* 移动端内容区域 */

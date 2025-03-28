@@ -7,9 +7,10 @@ const mongoose = require('mongoose');
 const path = require('path');
 const { typeDefs, resolvers } = require('./schema');
 require('dotenv').config(); // 确保加载环境变量
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5005;
 
 // 记录服务状态
 const serviceStatus = {
@@ -22,14 +23,9 @@ console.log(`准备在端口 ${PORT} 上启动服务器...`);
 
 // 配置更强大的CORS设置，确保移动端请求不被拒绝
 const corsOptions = {
-  origin: function (origin, callback) {
-    // 允许所有源访问，包括移动端请求
-    callback(null, true);
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
-  credentials: true,
-  maxAge: 86400 // 预检请求结果缓存24小时
+  origin: '*',  // 开发环境可设为*，生产环境应限制来源
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 // 启用CORS和JSON请求体解析
@@ -77,51 +73,29 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/onething'
 // DeepSeek API代理
 app.post('/api/chat', async (req, res) => {
   try {
-    console.log('收到聊天请求:', req.body);
+    console.log('收到前端请求:', JSON.stringify(req.body));
     
-    const API_URL = process.env.DEEPSEEK_API_URL || 'https://api.lkeap.cloud.tencent.com/v1/chat/completions';
-    const API_KEY = process.env.DEEPSEEK_API_KEY;
-    
-    // 检查API密钥是否存在
-    if (!API_KEY) {
-      console.error('错误: DeepSeek API密钥未设置');
-      serviceStatus.ai_service = false;
-      return res.status(500).json({
-        error: {
-          message: '服务器配置错误: API密钥未设置'
-        }
-      });
-    }
-    
-    // 转发请求到DeepSeek API
-    const response = await fetch(API_URL, {
-      method: 'POST',
+    // 请求DeepSeek API
+    const response = await axios({
+      method: 'post',
+      url: process.env.DEEPSEEK_API_URL,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
       },
-      body: JSON.stringify(req.body)
+      data: req.body,
+      timeout: 30000 // 增加超时时间
     });
     
-    const data = await response.json();
-    
-    // 更新AI服务状态
-    serviceStatus.ai_service = response.status >= 200 && response.status < 300;
-    
-    // 记录API响应
-    console.log('API响应状态:', response.status);
-    console.log('API响应数据:', data);
-    
-    // 返回结果
-    res.status(response.status).json(data);
+    console.log('DeepSeek API响应状态:', response.status);
+    res.json(response.data);
   } catch (error) {
-    console.error('API代理错误:', error);
-    serviceStatus.ai_service = false;
-    res.status(500).json({
-      error: {
-        message: `服务器错误: ${error.message}`
-      }
-    });
+    console.error('调用DeepSeek API出错:', error.message);
+    if (error.response) {
+      console.error('错误响应数据:', error.response.data);
+      console.error('错误状态码:', error.response.status);
+    }
+    res.status(500).json({ error: `与AI服务通信失败: ${error.message}` });
   }
 });
 
@@ -215,8 +189,8 @@ async function startServer() {
   try {
     await startApolloServer();
     
-    app.listen(PORT, () => {
-      console.log(`服务器运行在端口 ${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
       console.log(`REST API接口: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {

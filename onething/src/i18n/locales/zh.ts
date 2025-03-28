@@ -9,11 +9,9 @@ export default {
   nav: {
     dashboard: '首页',
     goals: '目标',
-    companion: '对话',
-    emotions: '情绪',
     review: '复盘',
-    settings: '设置',
-    help: '帮助',
+    emotions: '情绪',
+    profile: '我的',
   },
   
   // 仪表盘页面
@@ -32,19 +30,10 @@ export default {
   
   // 目标页面
   goals: {
-    management: '目标管理',
-    newGoal: '新目标',
-    allGoals: '所有目标',
-    inProgress: '进行中',
-    completed: '已完成',
-    priority: '优先级',
-    deadline: '截止日期',
-    completionRate: '完成度',
-    subgoals: '子目标',
-    viewDetails: '查看详情',
-    high: '高',
-    medium: '中',
-    low: '低',
+    summary: '目标管理',
+    noGoals: '暂无目标',
+    createFirst: '创建第一个目标',
+    viewAll: '查看全部',
   },
   
   // 任务页面

@@ -1,9 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-# 本项目readme.md文件地址是：/Volumes/project/software/onething6.0/readme.md
 # 产品定位和买点总结
 OneThing AI应用软件旨在为创业者和自由职业者、中、大学生等用户提供**AI智能目标管理服务**。主要解决用户高效的自我管理难、及时发现认知偏差和决策偏差难、以及面对长期压力，及时调整异常情绪难的三大痛点。我们将前沿的人工智能技术与目标管理、心理学理论完美结合，帮助用户更有效进行日常目标管理。
 

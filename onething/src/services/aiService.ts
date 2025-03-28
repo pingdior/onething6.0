@@ -6,18 +6,18 @@ import axios from 'axios';
 
 // 使用环境变量或默认值
 const API_CONFIG = {
-  // 本地代理服务器地址 - 修改为相对路径或动态获取
+  // 使用相对路径，适用于所有环境
   proxyURL: `/api/chat`,
   model: 'deepseek-v3',
 };
 
 // 获取基础URL，确保在移动端和Web端都能正确连接
 const getBaseUrl = () => {
-  // 在开发环境中使用不同的基础URL
   if (process.env.NODE_ENV === 'development') {
-    return process.env.REACT_APP_API_URL || 'http://localhost:4001';
+    // 开发环境使用配置的URL
+    return process.env.REACT_APP_API_URL || '';
   }
-  // 在生产环境中使用相对路径，这样移动端和Web端都能正确连接
+  // 生产环境：优先使用空字符串（相对路径）
   return '';
 };
 
@@ -63,8 +63,6 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      // 确保请求能够跨域且带上凭证
-      credentials: 'include',
       body: JSON.stringify(requestData)
     });
     
@@ -155,7 +153,6 @@ export const testAPIConnection = async (): Promise<boolean> => {
     
     // 使用新添加的测试AI端点
     const aiTestResponse = await fetch(`${baseUrl}/api/test-ai`, {
-      credentials: 'include',
       headers: {
         'Accept': 'application/json'
       }

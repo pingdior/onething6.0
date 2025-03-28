@@ -19,7 +19,7 @@ const ServiceStatus: React.FC = () => {
   const [checking, setChecking] = useState(false);
   
   // API基础URL
-  const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4001';
+  const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5005';
   
   // 检查服务状态
   const checkServices = async () => {
