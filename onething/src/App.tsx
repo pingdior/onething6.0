@@ -169,39 +169,38 @@ const App: React.FC = () => {
   
   // 监听AI服务状态
   useEffect(() => {
-    // 检查是否在移动设备上
-    if (isMobile()) {
-      // 监听AI服务状态变化
-      const checkAIService = async () => {
-        try {
-          const response = await fetch('/api/health');
-          const data = await response.json();
-          
-          if (data.services?.ai_service === false) {
-            setShowAIError(true);
-          } else {
-            setShowAIError(false);
-          }
-        } catch (error) {
-          console.error('检查AI服务状态失败:', error);
+    // 移除设备类型限制，所有设备都检查AI服务
+    // 监听AI服务状态变化
+    const checkAIService = async () => {
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        if (data.services?.ai_service === false) {
           setShowAIError(true);
+        } else {
+          setShowAIError(false);
         }
-      };
-      
-      // 初始检查
-      checkAIService();
-      
-      // 每30秒检查一次
-      const interval = setInterval(checkAIService, 30000);
-      
-      return () => clearInterval(interval);
-    }
+      } catch (error) {
+        console.error('检查AI服务状态失败:', error);
+        setShowAIError(true);
+      }
+    };
+    
+    // 初始检查
+    checkAIService();
+    
+    // 每30秒检查一次
+    const interval = setInterval(checkAIService, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        {showAIError && isMobile() && <AIServiceError onClose={() => setShowAIError(false)} />}
+        {/* 所有设备都显示AI服务错误提示 */}
+        {showAIError && <AIServiceError onClose={() => setShowAIError(false)} />}
         
         <Routes>
           {/* 欢迎页 */}

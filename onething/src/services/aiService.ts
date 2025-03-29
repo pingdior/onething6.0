@@ -59,18 +59,28 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
     
     // 构建完整URL，确保在不同环境下都能正确连接
     let baseUrl = getBaseUrl();
+    console.log('环境:', process.env.NODE_ENV, '基础URL:', baseUrl);
     
-    // 检测移动设备并使用绝对URL
+    // 检测环境和设备类型来决定URL构建方式
     const isMobileDevice = isMobile();
-    if (isMobileDevice) {
-      // 在移动设备上使用当前窗口的origin作为基础URL
+    
+    // 开发环境始终需要完整URL（localhost:5005）
+    if (process.env.NODE_ENV === 'development') {
+      // 确保开发环境有正确的API URL
+      if (!baseUrl) {
+        baseUrl = 'http://localhost:5005';
+        console.log('开发环境中未找到REACT_APP_API_URL，使用默认值:', baseUrl);
+      }
+    } 
+    // 生产环境移动设备使用绝对路径
+    else if (isMobileDevice) {
       baseUrl = window.location.origin;
-      console.log('检测到移动设备，使用origin作为基础URL:', baseUrl);
+      console.log('生产环境移动设备，使用origin作为基础URL:', baseUrl);
     }
+    // 生产环境Web端使用相对路径（空字符串）
     
     const fullUrl = `${baseUrl}${API_CONFIG.proxyURL}`;
-    
-    console.log('正在连接API服务:', fullUrl);
+    console.log('最终请求URL:', fullUrl);
     
     // 使用异步等待机制，添加10秒的超时
     const controller = new AbortController();
@@ -136,64 +146,63 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
       console.error('请求超时已中止');
     }
     
-    // 针对移动端的特殊处理 - 使用更简化的重试方式
-    if (isMobile()) {
-      console.log('检测到移动设备，尝试替代请求方式');
+    // 为所有设备类型提供重试逻辑，不仅限于移动设备
+    console.log('尝试替代请求方式');
+    try {
+      // 使用与原始请求相同的数据
+      const originalRequestData = { 
+        model: API_CONFIG.model,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 1000
+      };
+      
+      // 创建新的AbortController和超时
+      const retryController = new AbortController();
+      const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
+      
       try {
-        // 使用与原始请求相同的数据
-        const originalRequestData = { 
-          model: API_CONFIG.model,
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 1000
-        };
+        // 使用简化的fetch请求再试一次，显式指定完整URL
+        // 确保开发环境使用正确的API URL
+        const baseUrl = process.env.NODE_ENV === 'development' 
+          ? (process.env.REACT_APP_API_URL || 'http://localhost:5005')
+          : window.location.origin;
         
-        // 创建新的AbortController和超时
-        const retryController = new AbortController();
-        const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
+        const simpleResponse = await fetch(`${baseUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(originalRequestData),
+          signal: retryController.signal,
+          // 不使用缓存，强制新请求
+          cache: 'no-store'
+        });
         
-        try {
-          // 使用简化的fetch请求再试一次，显式指定完整URL
-          const origin = window.location.origin;
-          const simpleResponse = await fetch(`${origin}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(originalRequestData),
-            signal: retryController.signal,
-            // 不使用缓存，强制新请求
-            cache: 'no-store'
-          });
-          
-          // 清除超时
-          clearTimeout(retryTimeoutId);
-          
-          if (!simpleResponse.ok) {
-            throw new Error(`重试失败! 状态码: ${simpleResponse.status}`);
-          }
-          
-          const retryData = await simpleResponse.json();
-          if (retryData && 
-              retryData.choices && 
-              retryData.choices.length > 0 && 
-              retryData.choices[0].message) {
-            return retryData.choices[0].message.content;
-          }
-          
-          throw new Error('重试后响应格式依然无效');
-        } catch (retryErr) {
-          // 清除超时
-          clearTimeout(retryTimeoutId);
-          throw retryErr;
+        // 清除超时
+        clearTimeout(retryTimeoutId);
+        
+        if (!simpleResponse.ok) {
+          throw new Error(`重试失败! 状态码: ${simpleResponse.status}`);
         }
-      } catch (retryError: any) {
-        console.error('移动端重试也失败:', retryError);
-        // 返回备用响应而不是抛出错误，以防止应用崩溃
-        return "很抱歉，我暂时无法回复。与AI助手通信时出现问题，请检查您的网络连接或稍后再试。";
+        
+        const retryData = await simpleResponse.json();
+        if (retryData && 
+            retryData.choices && 
+            retryData.choices.length > 0 && 
+            retryData.choices[0].message) {
+          return retryData.choices[0].message.content;
+        }
+        
+        throw new Error('重试后响应格式依然无效');
+      } catch (retryErr) {
+        // 清除超时
+        clearTimeout(retryTimeoutId);
+        throw retryErr;
       }
+    } catch (retryError: any) {
+      console.error('重试请求失败:', retryError);
+      // 返回备用响应而不是抛出错误，以防止应用崩溃
+      return "很抱歉，我暂时无法回复。与AI助手通信时出现问题，请检查您的网络连接或稍后再试。";
     }
-    
-    // 返回备用响应而不是抛出错误，以防止应用崩溃
-    return `抱歉，我暂时无法连接到AI服务。请稍后再试或联系管理员检查API设置。${error.message ? `(错误: ${error.message})` : ""}`;
   }
 };
 
@@ -235,21 +244,31 @@ export const getDefaultSystemMessage = (): Message => {
 // 添加辅助函数，测试API连通性
 export const testAPIConnection = async (): Promise<boolean> => {
   try {
+    // 获取基础URL，处理开发环境
     const baseUrl = getBaseUrl();
-    console.log('测试代理服务器连接...');
+    console.log('测试API连接...使用baseUrl:', baseUrl);
+    
+    // 构建健康检查URL
+    const healthCheckUrl = baseUrl ? `${baseUrl}/api/health` : '/api/health';
     
     // 先测试代理服务器是否在线
-    const healthCheck = await fetch(`${baseUrl}/api/health`)
+    const healthCheck = await fetch(healthCheckUrl)
       .then(res => res.json())
-      .catch(() => null);
+      .catch((err) => {
+        console.error('健康检查请求失败:', err);
+        return null;
+      });
     
     if (!healthCheck || healthCheck.status !== 'ok') {
-      console.error('代理服务器未运行，请先启动server.js');
-      throw new Error('代理服务器未运行，请先运行: node server.js');
+      console.error('代理服务器未运行或健康检查失败:', healthCheck);
+      throw new Error('代理服务器未运行，请先启动server.js (端口5005)');
     }
     
+    // 构建测试AI的URL
+    const testAiUrl = baseUrl ? `${baseUrl}/api/test-ai` : '/api/test-ai';
+    
     // 使用新添加的测试AI端点
-    const aiTestResponse = await fetch(`${baseUrl}/api/test-ai`, {
+    const aiTestResponse = await fetch(testAiUrl, {
       headers: {
         'Accept': 'application/json'
       }
