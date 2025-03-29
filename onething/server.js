@@ -122,6 +122,10 @@ app.post('/api/chat', async (req, res) => {
     // 打印请求信息但不包含敏感内容
     console.log(`请求AI服务: ${apiUrl}`);
     
+    // 在API处理函数中添加
+    console.log('请求设备类型:', req.headers['user-agent']);
+    console.log('API密钥使用情况:', !!process.env.DEEPSEEK_API_KEY);
+    
     // 添加重试逻辑
     let response;
     let retryCount = 0;

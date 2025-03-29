@@ -88,12 +88,15 @@ export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
     
     try {
       // 使用我们的自定义代理服务器
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Client-Type': 'web-production' // 添加自定义标识
+      };
+      
       const response = await fetch(fullUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: headers,
         body: JSON.stringify(requestData),
         signal: controller.signal
       });
