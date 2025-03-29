@@ -18,13 +18,13 @@ export const isMobile = (): boolean => {
 
 // 获取用户系统语言
 export const getUserSystemLanguage = (): string => {
-  // 获取完整的系统语言设置，如 'en-US', 'zh-CN', 'ja-JP'
+  // 获取完整的系统语言设置
   const systemLang = navigator.language || 
     (navigator as any).userLanguage || 
     (navigator as any).browserLanguage || 
     'en';
   
-  // 提取基础语言代码（如'en', 'zh', 'ja'）
+  // 提取基础语言代码
   const baseLang = systemLang.split('-')[0];
   
   console.log('检测到系统语言:', systemLang, '基础语言:', baseLang);
@@ -41,7 +41,7 @@ const languageDetectorOptions = {
   order: ['navigator', 'querystring', 'cookie', 'localStorage', 'htmlTag'],
   
   // 缓存用户语言选择，确保在会话中保持一致
-  caches: ['localStorage'],
+  caches: [],
   
   // localStorage缓存键名
   lookupLocalStorage: 'i18nextLng',
@@ -88,6 +88,10 @@ i18n
     // 确保初始化时就立即应用检测到的语言
     load: 'currentOnly'
   } as any);
+
+// 确保每次应用启动时重新检测系统语言
+const detectedLang = getUserSystemLanguage();
+i18n.changeLanguage(detectedLang);
 
 // 为文档设置语言，确保屏幕阅读器和其他辅助技术能正确识别
 document.documentElement.lang = i18n.language;
