@@ -208,6 +208,93 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
           </ul>
         </div>
         
+        {/* 新增：任务分析和SOP总结区域 */}
+        {(review.taskAnalysis || review.sopRecommendations) && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4">任务分析与优化</h3>
+            
+            {/* 任务表现分析 */}
+            {review.taskAnalysis && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="text-center font-medium text-primary mb-2">做得好的方面</div>
+                  <ul className="pl-5 list-disc space-y-1 text-sm">
+                    {review.taskAnalysis.strengths.map((strength, index) => (
+                      <li key={index}>{strength}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <div className="text-center font-medium text-accent-color mb-2">需要改进的方面</div>
+                  <ul className="pl-5 list-disc space-y-1 text-sm">
+                    {review.taskAnalysis.improvements.map((improvement, index) => (
+                      <li key={index}>{improvement}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            {/* 详细任务分析 */}
+            {review.taskAnalysis?.detailedTasks && review.taskAnalysis.detailedTasks.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-3">详细分析</h4>
+                
+                {review.taskAnalysis.detailedTasks.map((task, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg mb-3 last:mb-0">
+                    <div className="flex justify-between mb-1">
+                      <div className="font-medium">{task.name}</div>
+                      <div className="flex items-center">
+                        <span className={`${
+                          task.efficiency === 'high' ? 'text-primary' : 
+                          task.efficiency === 'medium' ? 'text-warning-color' : 
+                          'text-red-500'
+                        } font-medium mr-2`}>
+                          {task.efficiency === 'high' ? '高效率' : 
+                           task.efficiency === 'medium' ? '一般' : 
+                           '低效率'}
+                        </span>
+                        <span>{'⭐'.repeat(task.rating)}</span>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {task.analysis}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* SOP建议 */}
+            {review.sopRecommendations && review.sopRecommendations.length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-700 mb-3">SOP流程优化建议</h4>
+                
+                {review.sopRecommendations.map((sop, index) => (
+                  <div key={index} className="bg-blue-50 p-4 rounded-lg mb-3 last:mb-0">
+                    <div className="font-medium text-tertiary-color mb-2">{sop.title}</div>
+                    <ol className="pl-5 space-y-1 text-sm" style={{ listStyleType: 'decimal' }}>
+                      {sop.steps.map((step, stepIndex) => (
+                        <li key={stepIndex}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* 应用建议按钮 */}
+            <div className="mt-6 flex justify-center">
+              <button 
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors"
+                onClick={() => window.alert('SOP建议已应用到明日计划！')}
+              >
+                应用建议到明日计划
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="flex justify-end space-x-3">
           <button 
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"

@@ -14,11 +14,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
     
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
-      month: 'short', 
+      month: 'numeric', 
       day: 'numeric' 
     };
     
-    return `${startDate.toLocaleDateString('zh-CN', options)} - ${endDate.toLocaleDateString('zh-CN', options)}`;
+    return `${startDate.toLocaleDateString('zh-CN', options)} 至 ${endDate.toLocaleDateString('zh-CN', options)}`;
   };
   
   // 根据完成率确定颜色
@@ -31,29 +31,37 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
   
   return (
     <div 
-      className="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white rounded-lg shadow p-4 mb-4 cursor-pointer hover:shadow-md transition-shadow"
       onClick={() => onClick(review)}
     >
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-start mb-3">
         <div className="flex items-center">
-          <span className="text-xl mr-2">📊</span>
-          <h3 className="text-lg font-bold">
-            {review.dateRange.type === 'week' ? '周复盘' : 
-             review.dateRange.type === 'month' ? '月复盘' : 
-             review.dateRange.type === 'day' ? '日复盘' : '复盘分析'}
-          </h3>
+          <span className="text-2xl mr-3">
+            {review.dateRange.type === 'week' ? '📅' : 
+             review.dateRange.type === 'month' ? '📆' : 
+             review.dateRange.type === 'day' ? '📋' : '📊'}
+          </span>
+          <div>
+            <h3 className="font-medium text-gray-800">
+              {review.dateRange.type === 'week' ? '周复盘' : 
+               review.dateRange.type === 'month' ? '月复盘' : 
+               review.dateRange.type === 'day' ? '日复盘' : '复盘分析'}
+            </h3>
+            <p className="text-sm text-gray-500">{formatDateRange()}</p>
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          {formatDateRange()}
+        
+        <div>
+          <span className={`text-lg font-bold ${getCompletionRateColor(review.overallProgress.completionRate)}`}>
+            {review.overallProgress.completionRate}%
+          </span>
         </div>
       </div>
       
       <div className="mb-3">
-        <div className="flex justify-between text-sm mb-1">
-          <span>完成率：</span>
-          <span className={getCompletionRateColor(review.overallProgress.completionRate)}>
-            {review.overallProgress.completionRate}%
-          </span>
+        <div className="text-xs text-gray-500 mb-1 flex justify-between">
+          <span>完成率</span>
+          <span>{review.overallProgress.completedTasks}/{review.overallProgress.totalTasks} 任务</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
@@ -68,35 +76,24 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onClick }) => {
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-gray-100 p-2 rounded-lg text-center">
-          <div className="text-xs text-gray-500">总任务数</div>
-          <div className="font-semibold">{review.overallProgress.totalTasks}</div>
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          <span>点击查看详情</span>
         </div>
-        <div className="bg-gray-100 p-2 rounded-lg text-center">
-          <div className="text-xs text-gray-500">已完成</div>
-          <div className="font-semibold">{review.overallProgress.completedTasks}</div>
-        </div>
-        <div className="bg-gray-100 p-2 rounded-lg text-center">
-          <div className="text-xs text-gray-500">平均效率</div>
-          <div className="font-semibold">{review.timeAnalysis.averageEfficiency}/10</div>
-        </div>
-      </div>
-      
-      <div className="text-sm">
-        <div className="font-medium mb-1">核心洞察：</div>
-        <ul className="list-disc pl-5 text-gray-600">
-          {review.insights.slice(0, 2).map((insight, index) => (
-            <li key={index}>{insight}</li>
-          ))}
-          {review.insights.length > 2 && (
-            <li>...</li>
+        
+        {/* 新增: 任务分析和SOP建议指示器 */}
+        <div className="flex gap-2">
+          {review.taskAnalysis && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              任务分析
+            </span>
           )}
-        </ul>
-      </div>
-      
-      <div className="text-sm text-primary font-medium cursor-pointer hover:underline text-right mt-2">
-        [查看完整分析]
+          {review.sopRecommendations && review.sopRecommendations.length > 0 && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              SOP优化
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

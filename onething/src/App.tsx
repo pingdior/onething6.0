@@ -49,7 +49,7 @@ const MobileBottomNav: React.FC = () => {
             <rect x="3" y="14" width="7" height="7"></rect>
           </svg>
         } 
-        label="首页" 
+        label="今日" 
       />
       <NavItem 
         path="/review" 

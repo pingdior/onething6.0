@@ -167,6 +167,60 @@ const Review: React.FC = () => {
         </div>
       </div>
       
+      {/* 新增: 任务分析和SOP展示卡片 */}
+      {reviews.length > 0 && reviews[0].taskAnalysis && (
+        <div className="card">
+          <div className="card-title">
+            <span>任务分析与优化</span>
+            <span className="text-sm text-gray-500">更多详情点击复盘查看</span>
+          </div>
+
+          {/* 任务分析概览 */}
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="font-medium text-gray-700">任务表现分析</h4>
+              <div className="text-xs text-gray-500">{reviews[0].dateRange.start} 至 {reviews[0].dateRange.end}</div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="text-sm font-medium text-primary mb-1">做得好的方面</div>
+                <div className="text-sm text-gray-600 ml-1">
+                  {reviews[0].taskAnalysis.strengths[0]}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-accent-color mb-1">需要改进的方面</div>
+                <div className="text-sm text-gray-600 ml-1">
+                  {reviews[0].taskAnalysis.improvements[0]}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SOP建议概览 */}
+          {reviews[0].sopRecommendations && reviews[0].sopRecommendations.length > 0 && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-700 mb-3">SOP流程优化建议</h4>
+              <div className="text-sm text-gray-600 mb-2">
+                <span className="font-medium">{reviews[0].sopRecommendations[0].title}</span>：
+                {reviews[0].sopRecommendations[0].steps.slice(0, 3).map((step, index) => (
+                  <span key={index} className="ml-1">
+                    {index + 1}. {step}{index < 2 ? '；' : '...'}
+                  </span>
+                ))}
+              </div>
+              <button 
+                className="text-primary text-sm font-medium"
+                onClick={() => handleReviewClick(reviews[0])}
+              >
+                查看完整建议
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* 复盘详情弹窗 */}
       {selectedReview && (
         <ReviewDetailModal 
