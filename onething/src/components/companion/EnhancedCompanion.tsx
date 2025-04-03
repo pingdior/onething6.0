@@ -23,6 +23,8 @@ import { useTheme } from '@mui/material/styles';
 import { sendMessageToAI, getDefaultSystemMessage } from '../../services/aiService';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
+import { isMobile } from '../../i18n';
+import { useNavigate } from 'react-router-dom';
 
 // 消息接口
 interface Message {
@@ -54,6 +56,8 @@ const EnhancedCompanion: React.FC = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const goals = useGoalStore(state => state.goals);
   const tasks = useTaskStore(state => state.tasks);
+  const isOnMobile = isMobile();
+  const navigate = useNavigate();
 
   // 模拟AI特性等级 - 实际应用中可能从用户数据获取
   const aiLevel = 3;
@@ -61,6 +65,24 @@ const EnhancedCompanion: React.FC = () => {
 
   // 初始化AI伴侣消息
   useEffect(() => {
+    // 尝试从localStorage加载消息历史
+    const savedMessages = localStorage.getItem('aiChatHistory');
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        // 确保timestamp是Date对象
+        const messagesWithDates = parsedMessages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(messagesWithDates);
+        return;
+      } catch (error) {
+        console.error('解析保存的消息历史出错:', error);
+      }
+    }
+
+    // 如果没有保存的历史，使用默认欢迎消息
     const welcomeMessage: Message = {
       id: Date.now().toString(),
       text: '你好，我是你的AI目标管理助手。我能帮你设定目标、分解任务，或者给你提供情绪支持。今天有什么我能帮到你的吗？',
@@ -70,6 +92,17 @@ const EnhancedCompanion: React.FC = () => {
     };
     setMessages([welcomeMessage]);
   }, []);
+
+  // 保存消息到localStorage
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        localStorage.setItem('aiChatHistory', JSON.stringify(messages));
+      } catch (error) {
+        console.error('保存消息历史出错:', error);
+      }
+    }
+  }, [messages]);
 
   // 滚动到最新消息
   useEffect(() => {
@@ -93,6 +126,109 @@ const EnhancedCompanion: React.FC = () => {
       和${upcomingDeadlines}个即将到期的截止日期（7天内）。
     `;
   };
+
+  // 添加跳转到语音输入的处理函数
+  const handleVoiceInputClick = () => {
+    navigate('/voice-input');
+  };
+
+  // 添加跳转到伙伴状态的处理函数
+  const handleCompanionStatusClick = () => {
+    navigate('/companion-status');
+  };
+
+  // 检查是否有从语音页面传来的输入
+  useEffect(() => {
+    const voiceInputText = localStorage.getItem('voiceInputText');
+    if (voiceInputText) {
+      // 设置为输入值并自动发送
+      setInput(voiceInputText);
+      // 清除存储
+      localStorage.removeItem('voiceInputText');
+      // 延迟一下发送，确保状态更新
+      setTimeout(() => {
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          text: voiceInputText,
+          sender: 'user',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, userMessage]);
+        
+        // 添加AI思考状态消息
+        const thinkingId = Date.now().toString();
+        setMessages(prev => [
+          ...prev,
+          {
+            id: thinkingId,
+            text: '思考中...',
+            sender: 'ai',
+            timestamp: new Date(),
+            thinking: true,
+          },
+        ]);
+        
+        setIsLoading(true);
+        
+        // 使用已有的发送逻辑发送消息
+        sendMessageToAI([
+          getDefaultSystemMessage(),
+          {
+            role: 'system' as const,
+            content: `这是关于用户当前状态的一些信息：${getUserContext()}`
+          },
+          ...messages
+            .filter(m => !m.thinking)
+            .map(m => ({
+              role: m.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: m.text,
+            })),
+          {
+            role: 'user' as const,
+            content: voiceInputText,
+          },
+        ])
+        .then(response => {
+          // 移除思考中消息并添加AI回复
+          setMessages(prev => {
+            const filtered = prev.filter(m => m.id !== thinkingId);
+            return [
+              ...filtered,
+              {
+                id: Date.now().toString(),
+                text: response,
+                sender: 'ai',
+                timestamp: new Date(),
+                suggestions: [
+                  '告诉我更多',
+                  voiceInputText.toLowerCase().includes('目标') ? '分解这个目标' : '查看我的目标进度',
+                  voiceInputText.toLowerCase().includes('任务') ? '调整任务优先级' : '今日任务规划',
+                ],
+              },
+            ];
+          });
+        })
+        .catch(error => {
+          console.error('AI服务错误:', error);
+          setMessages(prev => {
+            const filtered = prev.filter(m => m.id !== thinkingId);
+            return [
+              ...filtered,
+              {
+                id: Date.now().toString(),
+                text: '抱歉，我遇到了问题，无法处理您的请求。请稍后再试或检查您的网络连接。',
+                sender: 'ai',
+                timestamp: new Date(),
+              },
+            ];
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      }, 100);
+    }
+  }, []);
 
   // 处理消息发送
   const handleSendMessage = async () => {
@@ -166,16 +302,15 @@ const EnhancedCompanion: React.FC = () => {
         ];
       });
     } catch (error) {
-      console.error('AI通信错误:', error);
-      
-      // 移除思考中消息并添加错误消息
+      // 处理错误并移除thinking消息
+      console.error('AI服务错误:', error);
       setMessages(prev => {
         const filtered = prev.filter(m => m.id !== thinkingId);
         return [
           ...filtered,
           {
             id: Date.now().toString(),
-            text: '抱歉，我遇到了一些问题。请稍后再试。',
+            text: '抱歉，我遇到了问题，无法处理您的请求。请稍后再试或检查您的网络连接。',
             sender: 'ai',
             timestamp: new Date(),
           },
@@ -186,15 +321,24 @@ const EnhancedCompanion: React.FC = () => {
     }
   };
 
-  // 处理建议点击
-  const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
+  // 处理快捷建议点击
+  const handleSuggestionClick = (text: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+    // 添加用户消息
+    setMessages(prev => [...prev, userMessage]);
+    // 设置为输入值并自动发送
+    setInput(text);
     setTimeout(() => {
       handleSendMessage();
-    }, 10);
+    }, 100);
   };
 
-  // 处理输入框回车
+  // 处理键盘按键
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -202,9 +346,131 @@ const EnhancedCompanion: React.FC = () => {
     }
   };
 
-  // 时间格式化
+  // 格式化消息时间
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // 渲染消息
+  const renderMessage = (message: Message) => {
+    // 如果是思考中消息
+    if (message.thinking) {
+      return (
+        <Box
+          key={message.id}
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            mb: 2,
+            opacity: 0.7,
+          }}
+        >
+          <Avatar sx={{ ...AvatarStyle.ai, mr: 1 }}>
+            <SmartToyIcon fontSize="small" />
+          </Avatar>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CircularProgress size={16} sx={{ mr: 1 }} />
+            <Typography variant="body2">思考中...</Typography>
+          </Box>
+        </Box>
+      );
+    }
+
+    return (
+      <Grow
+        key={message.id}
+        in={true}
+        timeout={300}
+        style={{ transformOrigin: message.sender === 'user' ? 'right' : 'left' }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
+            alignItems: 'flex-start',
+            mb: 2,
+            ...(isOnMobile ? { px: 1 } : {}),
+          }}
+        >
+          {message.sender === 'ai' && (
+            <Avatar sx={{ ...AvatarStyle.ai, mr: 1, mt: 0.5 }}>
+              <SmartToyIcon fontSize="small" />
+            </Avatar>
+          )}
+          {message.sender === 'user' && (
+            <Avatar sx={{ ...AvatarStyle.user, ml: 1, mt: 0.5 }}>张</Avatar>
+          )}
+          <Box
+            sx={{
+              maxWidth: '75%',
+              ...(isOnMobile ? { maxWidth: '85%' } : {}),
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 1.5,
+                bgcolor: message.sender === 'user' ? '#7C6BFF' : '#F0F1F2',
+                color: message.sender === 'user' ? 'white' : 'text.primary',
+                borderRadius: message.sender === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                ...(isOnMobile ? {
+                  borderRadius: message.sender === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                  p: 2,
+                } : {}),
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  lineHeight: 1.4,
+                }}
+              >
+                {message.text}
+              </Typography>
+            </Paper>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                color: 'text.secondary',
+                mt: 0.5,
+                textAlign: message.sender === 'user' ? 'right' : 'left',
+              }}
+            >
+              {formatTime(message.timestamp)}
+            </Typography>
+
+            {/* 建议回复 */}
+            {message.sender === 'ai' && message.suggestions && message.suggestions.length > 0 && (
+              <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {message.suggestions.map((suggestion, index) => (
+                  <Zoom key={index} in={true} style={{ transitionDelay: `${index * 100}ms` }}>
+                    <Chip
+                      label={suggestion}
+                      size="small"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      sx={{
+                        borderRadius: '16px',
+                        bgcolor: 'rgba(78, 205, 196, 0.1)',
+                        color: '#4ECDC4',
+                        border: '1px solid rgba(78, 205, 196, 0.3)',
+                        '&:hover': {
+                          bgcolor: 'rgba(78, 205, 196, 0.2)',
+                        },
+                        fontSize: '0.75rem',
+                        height: '28px',
+                      }}
+                    />
+                  </Zoom>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Grow>
+    );
   };
 
   return (
@@ -217,26 +483,38 @@ const EnhancedCompanion: React.FC = () => {
         borderRadius: 2,
         overflow: 'hidden',
         border: `1px solid ${theme.palette.divider}`,
+        ...(isOnMobile ? { border: 'none', boxShadow: 'none' } : {}),
       }}
     >
-      {/* 伴侣头部 */}
+      {/* 伴侣头部 - 添加点击事件 */}
       <Box
         sx={{
           p: 2,
-          bgcolor: 'primary.light',
+          bgcolor: isOnMobile ? '#4ECDC4' : 'primary.light',
           color: 'primary.contrastText',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          ...(isOnMobile ? {
+            borderRadius: '0 0 16px 16px',
+            py: 1.5,
+          } : {}),
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar sx={{ bgcolor: 'primary.main', mr: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={handleCompanionStatusClick}>
+          <Avatar 
+            sx={{ 
+              bgcolor: isOnMobile ? 'white' : 'primary.main', 
+              color: isOnMobile ? '#4ECDC4' : 'white',
+              mr: 1.5,
+              cursor: 'pointer',
+            }}
+          >
             <SmartToyIcon />
           </Avatar>
           <Box>
             <Typography variant="subtitle1" fontWeight="bold">
-              AI助手
+              AI{isOnMobile ? '伙伴' : '助手'}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Chip
@@ -267,96 +545,28 @@ const EnhancedCompanion: React.FC = () => {
       <Box
         sx={{
           flex: 1,
+          bgcolor: 'background.default',
+          overflowY: 'auto',
           p: 2,
-          overflow: 'auto',
-          bgcolor: theme.palette.background.default,
+          ...(isOnMobile ? { p: 1.5, pb: 2 } : {}),
         }}
       >
-        {messages.map((message) => (
-          <Grow
-            key={message.id}
-            in={true}
-            style={{ transformOrigin: message.sender === 'user' ? 'right' : 'left' }}
-            timeout={500}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
-                mb: 2,
-              }}
-            >
-              <Avatar
-                sx={{
-                  ...AvatarStyle[message.sender],
-                  width: 36,
-                  height: 36,
-                  mx: 1,
-                }}
-              >
-                {message.sender === 'ai' ? <SmartToyIcon /> : '我'}
-              </Avatar>
-              <Box sx={{ maxWidth: '75%' }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: message.sender === 'user' ? 'primary.light' : 'background.paper',
-                    color: message.sender === 'user' ? 'primary.contrastText' : 'text.primary',
-                    borderColor: message.sender === 'user' ? 'primary.light' : theme.palette.divider,
-                  }}
-                >
-                  {message.thinking ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CircularProgress size={16} sx={{ mr: 1, color: 'inherit' }} />
-                      <Typography variant="body2">{message.text}</Typography>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {message.text}
-                    </Typography>
-                  )}
-                </Paper>
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                  {formatTime(message.timestamp)}
-                </Typography>
-
-                {/* 建议选项 */}
-                {message.suggestions && message.suggestions.length > 0 && (
-                  <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {message.suggestions.map((suggestion, index) => (
-                      <Zoom key={index} in={true} style={{ transitionDelay: `${index * 100}ms` }}>
-                        <Chip
-                          label={suggestion}
-                          size="small"
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          sx={{
-                            cursor: 'pointer',
-                            '&:hover': {
-                              bgcolor: 'primary.lighter',
-                            },
-                          }}
-                        />
-                      </Zoom>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          </Grow>
-        ))}
+        {messages.map(renderMessage)}
         <div ref={messageEndRef} />
       </Box>
 
-      {/* 输入区域 */}
-      <Divider />
+      {/* 消息输入区域 - 添加语音按钮点击事件 */}
       <Box
         sx={{
           p: 2,
           display: 'flex',
           alignItems: 'center',
           bgcolor: 'background.paper',
+          borderTop: `1px solid ${theme.palette.divider}`,
+          ...(isOnMobile ? { 
+            p: '12px 16px',
+            borderTop: '1px solid rgba(0, 0, 0, 0.05)',
+          } : {}),
         }}
       >
         <TextField
@@ -371,28 +581,69 @@ const EnhancedCompanion: React.FC = () => {
           size="small"
           sx={{
             '& .MuiOutlinedInput-root': {
-              borderRadius: 4,
+              borderRadius: isOnMobile ? '24px' : 4,
+              bgcolor: isOnMobile ? '#F3F4F6' : 'transparent',
             },
           }}
           disabled={isLoading}
         />
-        <IconButton color="primary" sx={{ ml: 1 }}>
-          <MicIcon />
-        </IconButton>
-        <Button
-          variant="contained"
-          color="primary"
-          endIcon={<SendIcon />}
-          onClick={handleSendMessage}
-          disabled={isLoading || input.trim() === ''}
-          sx={{
-            ml: 1,
-            borderRadius: 4,
-            px: 2,
-          }}
-        >
-          发送
-        </Button>
+        {isOnMobile ? (
+          <>
+            <IconButton 
+              color="primary" 
+              sx={{ 
+                ml: 1, 
+                bgcolor: '#9370DB', 
+                color: 'white',
+                '&:hover': {
+                  bgcolor: '#8a63d2',
+                },
+                width: 36,
+                height: 36,
+              }} 
+              onClick={handleVoiceInputClick}
+            >
+              <MicIcon fontSize="small" />
+            </IconButton>
+            <IconButton 
+              color="primary" 
+              sx={{ 
+                ml: 1, 
+                bgcolor: '#4ECDC4', 
+                color: 'white',
+                '&:hover': {
+                  bgcolor: '#45c1b9',
+                },
+                width: 36,
+                height: 36,
+              }} 
+              onClick={handleSendMessage}
+              disabled={isLoading || input.trim() === ''}
+            >
+              <SendIcon fontSize="small" />
+            </IconButton>
+          </>
+        ) : (
+          <>
+            <IconButton color="primary" sx={{ ml: 1 }} onClick={handleVoiceInputClick}>
+              <MicIcon />
+            </IconButton>
+            <Button
+              variant="contained"
+              color="primary"
+              endIcon={<SendIcon />}
+              onClick={handleSendMessage}
+              disabled={isLoading || input.trim() === ''}
+              sx={{
+                ml: 1,
+                borderRadius: 4,
+                px: 2,
+              }}
+            >
+              发送
+            </Button>
+          </>
+        )}
       </Box>
     </Paper>
   );

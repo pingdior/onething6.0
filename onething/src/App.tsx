@@ -21,6 +21,10 @@ import Companion from './pages/Companion';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import Welcome from './pages/Welcome';
+// 新增页面导入
+import CompanionStatus from './pages/CompanionStatus';
+import VoiceInput from './pages/VoiceInput';
+import GoalDetail from './pages/GoalDetail';
 
 // 更新移动端底部导航组件
 const MobileBottomNav: React.FC = () => {
@@ -31,7 +35,7 @@ const MobileBottomNav: React.FC = () => {
   // 如果是欢迎页，不显示底部导航
   if (currentPath === '/welcome') return null;
   
-  // 中心按钮点击处理函数
+  // 中心按钮点击处理函数 - 导航到聊天页面
   const handleCenterButtonClick = () => {
     navigate('/companion');
   };
@@ -63,10 +67,7 @@ const MobileBottomNav: React.FC = () => {
       />
       <div className="bottom-nav-center" onClick={handleCenterButtonClick}>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-          <line x1="12" y1="19" x2="12" y2="23"></line>
-          <line x1="8" y1="23" x2="16" y2="23"></line>
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
         </svg>
       </div>
       <NavItem 
@@ -83,7 +84,7 @@ const MobileBottomNav: React.FC = () => {
         label="情绪" 
       />
       <NavItem 
-        path="/settings"
+        path="/settings" 
         current={currentPath} 
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -123,17 +124,14 @@ const NavItem: React.FC<NavItemProps> = ({ path, current, icon, label }) => {
   );
 };
 
-// AI服务错误提示组件接口
-interface AIServiceErrorProps {
-  onClose: () => void;
-}
-
-// AI服务错误提示组件
-const AIServiceError: React.FC<AIServiceErrorProps> = ({ onClose }) => {
+// AIServiceError组件以便在AI服务连接失败时显示更友好的错误
+const AIServiceError: React.FC<{onClose: () => void}> = ({ onClose }) => {
   return (
     <div className="ai-service-error">
-      <div className="ai-service-error-icon">⚠️</div>
-      <div>无法连接到AI服务器，请检查您的网络连接或稍后再试。</div>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <span className="ai-service-error-icon">⚠️</span>
+        <span>无法连接到AI服务器，请检查您的网络连接或稍后再试。</span>
+      </div>
       <button className="ai-service-error-close" onClick={onClose}>×</button>
     </div>
   );
@@ -144,6 +142,8 @@ const App: React.FC = () => {
   const isLoggedIn = true;
   // AI服务错误状态
   const [showAIError, setShowAIError] = useState<boolean>(false);
+  // 添加连续失败计数
+  const [failureCount, setFailureCount] = useState<number>(0);
   
   // 获取翻译函数
   const { i18n } = useTranslation();
@@ -153,8 +153,10 @@ const App: React.FC = () => {
     // 检测是否为移动设备
     if (isMobile()) {
       document.body.classList.add('mobile-device');
+      document.documentElement.classList.add('mobile-device');
     } else {
       document.body.classList.add('desktop-device');
+      document.documentElement.classList.add('desktop-device');
     }
     
     // 设置文档的语言
@@ -164,43 +166,92 @@ const App: React.FC = () => {
     return () => {
       document.body.classList.remove('mobile-device');
       document.body.classList.remove('desktop-device');
+      document.documentElement.classList.remove('mobile-device');
+      document.documentElement.classList.remove('desktop-device');
     };
   }, [i18n.language]);
   
   // 监听AI服务状态
   useEffect(() => {
-    // 移除设备类型限制，所有设备都检查AI服务
-    // 监听AI服务状态变化
+    // 检查AI服务状态，增加重试机制
     const checkAIService = async () => {
       try {
-        const response = await fetch('/api/health');
+        // 添加超时控制
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch('/api/health', {
+          signal: controller.signal,
+          cache: 'no-store' // 不使用缓存
+        });
+        
+        clearTimeout(timeoutId);
         const data = await response.json();
         
         if (data.services?.ai_service === false) {
-          setShowAIError(true);
+          // 连续失败次数+1
+          setFailureCount(prev => prev + 1);
+          
+          // 只有连续失败3次以上才显示错误
+          if (failureCount >= 2) {
+            setShowAIError(true);
+          }
         } else {
+          // 重置失败计数
+          setFailureCount(0);
           setShowAIError(false);
         }
       } catch (error) {
         console.error('检查AI服务状态失败:', error);
-        setShowAIError(true);
+        
+        // 连续失败次数+1
+        setFailureCount(prev => prev + 1);
+        
+        // 只有连续失败3次以上才显示错误
+        if (failureCount >= 2) {
+          setShowAIError(true);
+        }
+
+        // 尝试备用检查方法
+        try {
+          // 用纯GET请求重试
+          const backupResponse = await fetch('/api/test-ai', { 
+            method: 'GET',
+            cache: 'no-store'
+          });
+          
+          if (backupResponse.ok) {
+            // 如果备用检查成功，重置失败计数并隐藏错误
+            setFailureCount(0);
+            setShowAIError(false);
+          }
+        } catch (backupError) {
+          console.error('备用检查也失败:', backupError);
+        }
       }
     };
     
     // 初始检查
     checkAIService();
     
-    // 每30秒检查一次
-    const interval = setInterval(checkAIService, 30000);
+    // 每60秒检查一次，延长间隔减少频繁提示
+    const interval = setInterval(checkAIService, 60000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [failureCount]);
+  
+  // 处理错误提示关闭
+  const handleCloseError = () => {
+    setShowAIError(false);
+    // 重置失败计数，给用户一次完整的重试机会
+    setFailureCount(0);
+  };
   
   return (
     <ErrorBoundary>
       <BrowserRouter>
         {/* 所有设备都显示AI服务错误提示 */}
-        {showAIError && <AIServiceError onClose={() => setShowAIError(false)} />}
+        {showAIError && <AIServiceError onClose={handleCloseError} />}
         
         <Routes>
           {/* 欢迎页 */}
@@ -209,14 +260,17 @@ const App: React.FC = () => {
           {/* 主应用路由 */}
           <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/welcome" />} />
           <Route path="/goals" element={isLoggedIn ? <Goals /> : <Navigate to="/welcome" />} />
+          <Route path="/goal-detail/:id" element={isLoggedIn ? <GoalDetail /> : <Navigate to="/welcome" />} />
           <Route path="/tasks" element={isLoggedIn ? <Tasks /> : <Navigate to="/welcome" />} />
           <Route path="/emotions" element={isLoggedIn ? <Emotions /> : <Navigate to="/welcome" />} />
           <Route path="/review" element={isLoggedIn ? <Review /> : <Navigate to="/welcome" />} />
           <Route path="/companion" element={isLoggedIn ? <Companion /> : <Navigate to="/welcome" />} />
+          <Route path="/companion-status" element={isLoggedIn ? <CompanionStatus /> : <Navigate to="/welcome" />} />
+          <Route path="/voice-input" element={isLoggedIn ? <VoiceInput /> : <Navigate to="/welcome" />} />
           <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/welcome" />} />
           <Route path="/help" element={isLoggedIn ? <Help /> : <Navigate to="/welcome" />} />
           
-          {/* 默认重定向 */}
+          {/* 默认重定向 - 修改为进入dashboard而不是companion */}
           <Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/welcome"} />} />
         </Routes>
         

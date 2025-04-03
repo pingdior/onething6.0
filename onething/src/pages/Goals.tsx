@@ -10,6 +10,8 @@ import GoalCard from '../components/goals/GoalCard';
 import GoalDetailModal from '../components/goals/GoalDetailModal';
 import AddGoalModal from '../components/goals/AddGoalModal';
 import { Goal, useGoalStore } from '../store/goalStore';
+import { useNavigate } from 'react-router-dom';
+import { isMobile } from '../i18n';
 
 type GoalFilter = 'all' | 'inProgress' | 'completed';
 type GoalSort = 'priority' | 'deadline' | 'completion';
@@ -20,6 +22,8 @@ const Goals: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [filter, setFilter] = useState<GoalFilter>('all');
   const [sort, setSort] = useState<GoalSort>('priority');
+  const navigate = useNavigate();
+  const isOnMobile = isMobile();
   
   const goals = useGoalStore(state => state.goals);
   
@@ -47,8 +51,12 @@ const Goals: React.FC = () => {
   });
   
   const handleGoalClick = (goal: Goal) => {
-    setSelectedGoal(goal);
-    setShowDetailModal(true);
+    if (isOnMobile) {
+      navigate(`/goal-detail/${goal.id}`);
+    } else {
+      setSelectedGoal(goal);
+      setShowDetailModal(true);
+    }
   };
   
   const handleOpenAddModal = () => {

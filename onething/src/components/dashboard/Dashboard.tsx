@@ -7,7 +7,7 @@ import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
 import GoalProgressChart from '../goals/GoalProgressChart';
 import TimeHeatmapChart from '../review/TimeHeatmapChart';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AssessmentIcon from '@mui/icons-material/Assessment';
@@ -131,6 +131,7 @@ const DashboardReviewSection = () => {
 const Dashboard: React.FC = () => {
   const goals = useGoalStore(state => state.goals);
   const tasks = useTaskStore(state => state.tasks);
+  const navigate = useNavigate(); // 添加导航hook
   
   const [completionRate, setCompletionRate] = useState(0);
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -192,6 +193,11 @@ const Dashboard: React.FC = () => {
       }
     }
     return data;
+  };
+  
+  // 添加跳转到目标页面的处理函数
+  const handleViewAllGoals = () => {
+    navigate('/goals');
   };
   
   return (
@@ -262,12 +268,32 @@ const Dashboard: React.FC = () => {
       
       {/* 详细信息区域 */}
       <Grid container spacing={3}>
-        {/* 优先目标区域 */}
+        {/* 优先目标区域 - 添加查看全部按钮 */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2, borderRadius: '8px', height: '100%' }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              优先目标
-            </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mb: 1 
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                优先目标
+              </Typography>
+              {isMobileDevice && (
+                <Button 
+                  size="small" 
+                  onClick={handleViewAllGoals}
+                  sx={{ 
+                    color: '#4ECDC4', 
+                    textTransform: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  查看全部
+                </Button>
+              )}
+            </Box>
             <Divider sx={{ my: 1 }} />
             <GoalProgressChart 
               goal={highPriorityGoal} 

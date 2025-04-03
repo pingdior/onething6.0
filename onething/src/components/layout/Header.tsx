@@ -30,10 +30,17 @@ const Header: React.FC = () => {
           sx={{ 
             flexGrow: 1, 
             fontWeight: 600,
-            color: '#4ECDC4'
+            color: '#4ECDC4',
+            fontSize: isOnMobile ? '1rem' : '1.25rem',
+            display: 'flex',
+            alignItems: 'center'
           }}
         >
-          {t('app.name')}
+          {isOnMobile ? (
+            <span style={{ color: '#4ECDC4' }}>onething-你的目标达成伙伴</span>
+          ) : (
+            t('app.name')
+          )}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {!isOnMobile && <LanguageSwitcher />}

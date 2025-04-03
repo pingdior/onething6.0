@@ -27,3 +27,9 @@ yarn-error.log*
 # 日志文件
 logs/
 *.log
+
+# 忽略文档和设计资源
+/doc
+/doc/**
+/src/assets/mb_png
+/src/assets/mb_png/**
