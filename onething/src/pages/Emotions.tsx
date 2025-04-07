@@ -7,8 +7,10 @@ import AddEmotionModal from '../components/emotion/AddEmotionModal';
 import EmotionTrendChart from '../components/emotion/EmotionTrendChart';
 import EmotionDistributionChart from '../components/emotion/EmotionDistributionChart';
 import { Box, Typography, Button, Paper, Grid, useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 const Emotions: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const emotions = useEmotionStore(state => state.records);
   const addRecord = useEmotionStore(state => state.addRecord);
@@ -107,16 +109,7 @@ const Emotions: React.FC = () => {
   };
   
   const getEmotionName = (type: string): string => {
-    switch(type) {
-      case 'happy': return '开心';
-      case 'excited': return '兴奋';
-      case 'calm': return '平静';
-      case 'sad': return '伤心';
-      case 'anxious': return '焦虑';
-      case 'angry': return '生气';
-      case 'tired': return '疲惫';
-      default: return '其他';
-    }
+    return t(`emotions.moodTypes.${type}`) || type;
   };
   
   // 获取当前情绪分布百分比
@@ -146,25 +139,25 @@ const Emotions: React.FC = () => {
     <AppLayout>
       <div className="card">
         <div className="card-title">
-          <span>情绪趋势</span>
+          <span>{t('emotions.trend')}</span>
           <div>
             <button 
               className={`btn btn-sm ${period === 'week' ? 'btn-primary' : 'btn-secondary'} mr-2`}
               onClick={() => setPeriod('week')}
             >
-              周
+              {t('review.weekly')}
             </button>
             <button 
               className={`btn btn-sm ${period === 'month' ? 'btn-primary' : 'btn-secondary'} mr-2`}
               onClick={() => setPeriod('month')}
             >
-              月
+              {t('review.monthly')}
             </button>
             <button 
               className={`btn btn-sm ${period === 'year' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setPeriod('year')}
             >
-              年
+              {t('time.year')}
             </button>
           </div>
         </div>
@@ -174,11 +167,11 @@ const Emotions: React.FC = () => {
       </div>
 
       <div className="card">
-        <div className="card-title">情绪记录</div>
+        <div className="card-title">{t('emotions.moodRecord')}</div>
         <div>
-          今天的情绪：{currentEmotion ? getEmotionIcon(currentEmotion.emotion) : '😐'}
+          {t('emotions.todayMood')}：{currentEmotion ? getEmotionIcon(currentEmotion.emotion) : '😐'}
         </div>
-        <div style={{ margin: '1rem 0' }}>近期情绪分布：</div>
+        <div style={{ margin: '1rem 0' }}>{t('emotions.recentDistribution')}：</div>
         <div className="emotion-distribution">
           <EmotionDistributionChart records={filteredRecords} />
         </div>
@@ -193,19 +186,19 @@ const Emotions: React.FC = () => {
 
       <div className="card">
         <div className="card-title">
-          <span>情绪日记</span>
+          <span>{t('emotions.emotionJournal')}</span>
           <button 
             className="btn btn-sm btn-primary"
             onClick={() => setShowAddModal(true)}
           >
-            + 记录今日情绪
+            + {t('emotions.recordToday')}
           </button>
         </div>
         
         {recentRecords.map(emotion => (
           <div key={emotion.id} className="emotion-journal-item" onClick={() => handleEmotionClick(emotion)}>
             <div className="journal-date">
-              {new Date(emotion.date).toLocaleDateString('zh-CN', {
+              {new Date(emotion.date).toLocaleDateString(i18n.language, {
                 month: 'numeric',
                 day: 'numeric'
               })} - {getEmotionIcon(emotion.emotion)} {getEmotionName(emotion.emotion)}
@@ -217,7 +210,7 @@ const Emotions: React.FC = () => {
         ))}
         
         {recentRecords.length === 0 && (
-          <div className="text-sm text-gray-500 p-4">暂无情绪记录</div>
+          <div className="text-sm text-gray-500 p-4">{t('emotions.noRecords')}</div>
         )}
       </div>
 

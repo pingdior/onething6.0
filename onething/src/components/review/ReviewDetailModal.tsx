@@ -1,5 +1,6 @@
 import React from 'react';
 import { ReviewData } from '../../store/reviewStore';
+import { useTranslation } from 'react-i18next';
 
 interface ReviewDetailModalProps {
   review: ReviewData;
@@ -7,6 +8,8 @@ interface ReviewDetailModalProps {
 }
 
 const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }) => {
+  const { t, i18n } = useTranslation();
+  
   // 格式化日期范围
   const formatDateRange = () => {
     const startDate = new Date(review.dateRange.start);
@@ -18,7 +21,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
       day: 'numeric' 
     };
     
-    return `${startDate.toLocaleDateString('zh-CN', options)} 至 ${endDate.toLocaleDateString('zh-CN', options)}`;
+    return `${startDate.toLocaleDateString(i18n.language, options)} ${t('review.to')} ${endDate.toLocaleDateString(i18n.language, options)}`;
   };
   
   // 根据完成率确定颜色
@@ -29,6 +32,14 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
     return 'text-red-500';
   };
   
+  // 获取复盘类型文本
+  const getReviewTypeText = () => {
+    if (review.dateRange.type === 'week') return t('review.weeklyReview');
+    if (review.dateRange.type === 'month') return t('review.monthlyReview');
+    if (review.dateRange.type === 'day') return t('review.dailyReview');
+    return t('review.reviewAnalysis');
+  };
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
@@ -37,9 +48,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
             <span className="text-3xl mr-3">📊</span>
             <div>
               <h2 className="text-2xl font-bold">
-                {review.dateRange.type === 'week' ? '周复盘' : 
-                 review.dateRange.type === 'month' ? '月复盘' : 
-                 review.dateRange.type === 'day' ? '日复盘' : '复盘分析'}
+                {getReviewTypeText()}
               </h2>
               <p className="text-gray-500">{formatDateRange()}</p>
             </div>
@@ -56,7 +65,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
         
         {/* 整体进度 */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4">整体进度</h3>
+          <h3 className="text-lg font-medium mb-4">{t('review.overallProgress')}</h3>
           
           <div className="flex items-center mb-3">
             <div className="text-4xl font-bold mr-4 flex-none">
@@ -66,9 +75,9 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
             </div>
             <div className="flex-1">
               <div className="text-sm mb-1 flex justify-between">
-                <span>完成率</span>
+                <span>{t('review.completionRate')}</span>
                 <span>
-                  {review.overallProgress.completedTasks}/{review.overallProgress.totalTasks} 任务
+                  {review.overallProgress.completedTasks}/{review.overallProgress.totalTasks} {t('tasks.dailyTasks')}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
@@ -87,15 +96,15 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
           
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gray-100 p-4 rounded-lg text-center">
-              <div className="text-sm text-gray-500">任务总数</div>
+              <div className="text-sm text-gray-500">{t('review.totalTasks')}</div>
               <div className="text-xl font-bold">{review.overallProgress.totalTasks}</div>
             </div>
             <div className="bg-gray-100 p-4 rounded-lg text-center">
-              <div className="text-sm text-gray-500">已完成任务</div>
+              <div className="text-sm text-gray-500">{t('review.completedTasks')}</div>
               <div className="text-xl font-bold">{review.overallProgress.completedTasks}</div>
             </div>
             <div className="bg-gray-100 p-4 rounded-lg text-center">
-              <div className="text-sm text-gray-500">平均效率</div>
+              <div className="text-sm text-gray-500">{t('review.averageEfficiency')}</div>
               <div className="text-xl font-bold">{review.timeAnalysis.averageEfficiency}/10</div>
             </div>
           </div>
@@ -103,7 +112,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
         
         {/* 目标进展 */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4">目标进展</h3>
+          <h3 className="text-lg font-medium mb-4">{t('review.goalsProgress')}</h3>
           
           {review.goalDetails.map((goal) => (
             <div key={goal.id} className="mb-4 border-b border-gray-200 pb-4">
@@ -125,8 +134,8 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
               </div>
               
               <div className="text-sm text-gray-500 flex justify-between">
-                <span>已完成 {goal.completedItems}/{goal.totalItems} 个任务</span>
-                <span>投入时间 {Math.round(goal.timeSpent / 60)} 小时</span>
+                <span>{t('review.completedItemsCount', { completed: goal.completedItems, total: goal.totalItems })}</span>
+                <span>{t('review.timeSpent', { hours: Math.round(goal.timeSpent / 60) })}</span>
               </div>
             </div>
           ))}
@@ -134,10 +143,10 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
         
         {/* 时间效率分析 */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4">时间效率分析</h3>
+          <h3 className="text-lg font-medium mb-4">{t('review.timeEfficiencyAnalysis')}</h3>
           
           <div className="bg-gray-100 p-4 rounded-lg mb-4">
-            <div className="text-sm font-medium mb-2">最佳工作时段</div>
+            <div className="text-sm font-medium mb-2">{t('review.bestTimeSlots')}</div>
             <div className="flex items-end h-32 space-x-2">
               {Array.from({ length: 24 }).map((_, hour) => {
                 const timeSlot = review.timeAnalysis.bestTimeSlots.find(slot => slot.hour === hour);
@@ -164,17 +173,17 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
           
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gray-100 p-4 rounded-lg">
-              <div className="text-sm font-medium mb-1">中断次数</div>
+              <div className="text-sm font-medium mb-1">{t('review.interruptionCount')}</div>
               <div className="flex items-baseline">
                 <span className="text-xl font-bold">{review.timeAnalysis.interruptionCount}</span>
-                <span className="text-sm text-gray-500 ml-2">次</span>
+                <span className="text-sm text-gray-500 ml-2">{t('review.times')}</span>
               </div>
             </div>
             <div className="bg-gray-100 p-4 rounded-lg">
-              <div className="text-sm font-medium mb-1">平均专注时长</div>
+              <div className="text-sm font-medium mb-1">{t('review.averageFocusTime')}</div>
               <div className="flex items-baseline">
                 <span className="text-xl font-bold">{Math.round(45 + Math.random() * 15)}</span>
-                <span className="text-sm text-gray-500 ml-2">分钟</span>
+                <span className="text-sm text-gray-500 ml-2">{t('time.minutes')}</span>
               </div>
             </div>
           </div>
@@ -182,7 +191,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
         
         {/* 核心洞察 */}
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4">核心洞察</h3>
+          <h3 className="text-lg font-medium mb-4">{t('review.coreInsights')}</h3>
           
           <ul className="space-y-2 text-gray-700">
             {review.insights.map((insight, index) => (
@@ -196,7 +205,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
         
         {/* 行动建议 */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4">行动建议</h3>
+          <h3 className="text-lg font-medium mb-4">{t('review.actionSuggestions')}</h3>
           
           <ul className="space-y-2 text-gray-700">
             {review.recommendations.map((recommendation, index) => (
@@ -211,13 +220,13 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
         {/* 新增：任务分析和SOP总结区域 */}
         {(review.taskAnalysis || review.sopRecommendations) && (
           <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4">任务分析与优化</h3>
+            <h3 className="text-lg font-medium mb-4">{t('review.taskAnalysisAndOptimization')}</h3>
             
             {/* 任务表现分析 */}
             {review.taskAnalysis && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-center font-medium text-primary mb-2">做得好的方面</div>
+                  <div className="text-center font-medium text-primary mb-2">{t('review.strengths')}</div>
                   <ul className="pl-5 list-disc space-y-1 text-sm">
                     {review.taskAnalysis.strengths.map((strength, index) => (
                       <li key={index}>{strength}</li>
@@ -225,7 +234,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
                   </ul>
                 </div>
                 <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="text-center font-medium text-accent-color mb-2">需要改进的方面</div>
+                  <div className="text-center font-medium text-accent-color mb-2">{t('review.improvements')}</div>
                   <ul className="pl-5 list-disc space-y-1 text-sm">
                     {review.taskAnalysis.improvements.map((improvement, index) => (
                       <li key={index}>{improvement}</li>
@@ -238,7 +247,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
             {/* 详细任务分析 */}
             {review.taskAnalysis?.detailedTasks && review.taskAnalysis.detailedTasks.length > 0 && (
               <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">详细分析</h4>
+                <h4 className="font-medium text-gray-700 mb-3">{t('review.detailedAnalysis')}</h4>
                 
                 {review.taskAnalysis.detailedTasks.map((task, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-lg mb-3 last:mb-0">
@@ -250,9 +259,9 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
                           task.efficiency === 'medium' ? 'text-warning-color' : 
                           'text-red-500'
                         } font-medium mr-2`}>
-                          {task.efficiency === 'high' ? '高效率' : 
-                           task.efficiency === 'medium' ? '一般' : 
-                           '低效率'}
+                          {task.efficiency === 'high' ? t('review.efficiency.high') : 
+                           task.efficiency === 'medium' ? t('review.efficiency.medium') : 
+                           t('review.efficiency.low')}
                         </span>
                         <span>{'⭐'.repeat(task.rating)}</span>
                       </div>
@@ -268,7 +277,7 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
             {/* SOP建议 */}
             {review.sopRecommendations && review.sopRecommendations.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-700 mb-3">SOP流程优化建议</h4>
+                <h4 className="font-medium text-gray-700 mb-3">{t('review.sopRecommendations')}</h4>
                 
                 {review.sopRecommendations.map((sop, index) => (
                   <div key={index} className="bg-blue-50 p-4 rounded-lg mb-3 last:mb-0">
@@ -287,9 +296,9 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
             <div className="mt-6 flex justify-center">
               <button 
                 className="px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors"
-                onClick={() => window.alert('SOP建议已应用到明日计划！')}
+                onClick={() => window.alert(t('review.sopAppliedAlert'))}
               >
-                应用建议到明日计划
+                {t('review.applyToTomorrowPlan')}
               </button>
             </div>
           </div>
@@ -300,13 +309,13 @@ const ReviewDetailModal: React.FC<ReviewDetailModalProps> = ({ review, onClose }
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
             onClick={onClose}
           >
-            关闭
+            {t('actions.close')}
           </button>
           <button 
             className="px-4 py-2 bg-primary text-white rounded-md"
             onClick={onClose}
           >
-            导出报告
+            {t('review.exportReport')}
           </button>
         </div>
       </div>

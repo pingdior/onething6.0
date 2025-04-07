@@ -80,6 +80,8 @@ const GoalsSummarySection = () => {
 */
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation(); // 添加翻译函数
+  
   return (
     <AppLayout>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -91,7 +93,7 @@ const Dashboard: React.FC = () => {
             mb: 3 
           }}
         >
-          仪表盘
+          {t('nav.dashboard')}
         </Typography>
         
         <Box sx={{ flex: 1 }}>

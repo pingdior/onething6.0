@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
+import { useTranslation } from 'react-i18next';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -26,6 +27,8 @@ ChartJS.register(
 );
 
 const EmotionChart: React.FC = () => {
+  const { t } = useTranslation();
+  
   // 模拟情绪数据
   const dates = ['3/13', '3/14', '3/15', '3/16', '3/17', '3/18', '3/19'];
   const moodData = [65, 70, 55, 60, 75, 85, 80];
@@ -35,7 +38,7 @@ const EmotionChart: React.FC = () => {
     labels: dates,
     datasets: [
       {
-        label: '愉悦度',
+        label: t('emotions.chart.pleasantness'),
         data: moodData,
         borderColor: '#4ECDC4',
         backgroundColor: 'rgba(78, 205, 196, 0.1)',
@@ -43,7 +46,7 @@ const EmotionChart: React.FC = () => {
         fill: true
       },
       {
-        label: '能量水平',
+        label: t('emotions.chart.energyLevel'),
         data: energyData,
         borderColor: '#FF6B6B',
         backgroundColor: 'rgba(255, 107, 107, 0.1)',
@@ -72,7 +75,7 @@ const EmotionChart: React.FC = () => {
   return (
     <Paper sx={{ p: 2, height: '100%' }}>
       <Typography variant="h6" gutterBottom>
-        情绪趋势
+        {t('emotions.trend')}
       </Typography>
       <Box sx={{ height: 250 }}>
         <Line data={data} options={options} />

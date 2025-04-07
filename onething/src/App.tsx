@@ -4,6 +4,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ServiceStatus from './components/common/ServiceStatus';
 import { useTranslation } from 'react-i18next';
 import { isMobile } from './i18n';
+import { Fab } from '@mui/material'; // 导入 Fab 组件
+import MicIcon from '@mui/icons-material/Mic'; // 导入麦克风图标
 
 // 导入 i18n 配置
 import './i18n';
@@ -25,6 +27,10 @@ import Welcome from './pages/Welcome';
 import CompanionStatus from './pages/CompanionStatus';
 import VoiceInput from './pages/VoiceInput';
 import GoalDetail from './pages/GoalDetail';
+
+// 导入切好的图标
+import ReviewIcon from './assets/icons/review-icon.svg';
+import ChatIcon from './assets/icons/chat-icon.svg';
 
 // 更新移动端底部导航组件
 const MobileBottomNav: React.FC = () => {
@@ -58,17 +64,21 @@ const MobileBottomNav: React.FC = () => {
       <NavItem 
         path="/review" 
         current={currentPath} 
-        icon={
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-          </svg>
-        } 
+        icon={<img src={ReviewIcon} alt="复盘" width="24" height="24" />} 
         label="复盘" 
       />
       <div className="bottom-nav-center" onClick={handleCenterButtonClick}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-        </svg>
+        <Fab 
+          color="primary" 
+          aria-label="chat" 
+          size="medium" // 可以调整大小
+          sx={{ 
+            boxShadow: 'none', // 移除阴影
+            bgcolor: '#4ECDC4' // 使用主色调
+          }}
+        >
+          <MicIcon />
+        </Fab>
       </div>
       <NavItem 
         path="/emotions" 

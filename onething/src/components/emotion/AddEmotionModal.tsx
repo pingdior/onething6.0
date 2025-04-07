@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -25,6 +25,7 @@ import { Close as CloseIcon } from '@mui/icons-material';
 import { EmotionType, EmotionRecord } from '../../store/emotionStore';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
+import { useTranslation } from 'react-i18next';
 
 interface AddEmotionModalProps {
   open: boolean;
@@ -33,21 +34,8 @@ interface AddEmotionModalProps {
   initialRecord?: EmotionRecord;
 }
 
-const emotionOptions: Array<{ type: EmotionType; emoji: string; label: string }> = [
-  { type: 'happy', emoji: '😊', label: '开心' },
-  { type: 'excited', emoji: '🤩', label: '兴奋' },
-  { type: 'calm', emoji: '😌', label: '平静' },
-  { type: 'sad', emoji: '😔', label: '伤心' },
-  { type: 'anxious', emoji: '😰', label: '焦虑' },
-  { type: 'angry', emoji: '😠', label: '生气' },
-  { type: 'tired', emoji: '😫', label: '疲惫' },
-];
-
-const factorOptions = [
-  '工作', '学习', '健康', '人际关系', '家庭', '财务', '个人成长'
-];
-
 const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave, initialRecord }) => {
+  const { t, i18n } = useTranslation();
   const goals = useGoalStore(state => state.goals);
   const tasks = useTaskStore(state => state.tasks);
   
@@ -59,6 +47,26 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>(initialRecord?.relatedTasks || []);
   const [date, setDate] = useState(initialRecord?.date || new Date().toISOString().split('T')[0]);
   
+  const emotionOptions = useMemo(() => [
+    { type: 'happy' as EmotionType, emoji: '😊', label: t('emotions.moodTypes.happy') },
+    { type: 'excited' as EmotionType, emoji: '🤩', label: t('emotions.moodTypes.excited') },
+    { type: 'calm' as EmotionType, emoji: '😌', label: t('emotions.moodTypes.calm') },
+    { type: 'sad' as EmotionType, emoji: '😔', label: t('emotions.moodTypes.sad') },
+    { type: 'anxious' as EmotionType, emoji: '😰', label: t('emotions.moodTypes.anxious') },
+    { type: 'angry' as EmotionType, emoji: '😠', label: t('emotions.moodTypes.angry') },
+    { type: 'tired' as EmotionType, emoji: '😫', label: t('emotions.moodTypes.tired') },
+  ], [t]);
+
+  const factorOptions = useMemo(() => [
+    t('emotions.factors.work'), 
+    t('emotions.factors.study'), 
+    t('emotions.factors.health'), 
+    t('emotions.factors.relationship'), 
+    t('emotions.factors.family'), 
+    t('emotions.factors.finance'), 
+    t('emotions.factors.personalGrowth')
+  ], [t]);
+
   // 切换情绪
   const handleSelectEmotion = (emotion: EmotionType) => {
     setSelectedEmotion(emotion);
@@ -133,7 +141,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
       <DialogTitle sx={{ pb: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6" component="div">
-            {initialRecord ? '编辑情绪记录' : '记录今日情绪'}
+            {initialRecord ? t('emotions.editRecord') : t('emotions.recordToday')}
           </Typography>
           <IconButton onClick={handleClose} size="small">
             <CloseIcon fontSize="small" />
@@ -147,7 +155,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
-              你今天感觉如何？
+              {t('emotions.howDoYouFeel')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {emotionOptions.map(option => (
@@ -182,7 +190,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
           
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
-              情绪强度
+              {t('emotions.intensity')}
             </Typography>
             <Box sx={{ px: 1 }}>
               <Slider
@@ -195,15 +203,15 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
                 valueLabelDisplay="auto"
               />
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2" color="text.secondary">弱</Typography>
-                <Typography variant="body2" color="text.secondary">强</Typography>
+                <Typography variant="body2" color="text.secondary">{t('emotions.intensityScale.weak')}</Typography>
+                <Typography variant="body2" color="text.secondary">{t('emotions.intensityScale.strong')}</Typography>
               </Box>
             </Box>
           </Grid>
           
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
-              关联事件
+              {t('emotions.relatedFactors')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {factorOptions.map(factor => (
@@ -221,13 +229,13 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
           
           <Grid item xs={12}>
             <Typography variant="subtitle1" gutterBottom>
-              详细描述
+              {t('emotions.detailedDescription')}
             </Typography>
             <TextField
               fullWidth
               multiline
               rows={4}
-              placeholder="今天发生了什么？你的感受如何？"
+              placeholder={t('emotions.descriptionPlaceholder')}
               variant="outlined"
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -236,7 +244,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
           
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle1" gutterBottom>
-              日期
+              {t('emotions.date')}
             </Typography>
             <TextField
               fullWidth
@@ -250,7 +258,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
           {goals.length > 0 && (
             <Grid item xs={12} sm={6}>
               <Typography variant="subtitle1" gutterBottom>
-                关联目标
+                {t('emotions.relatedGoals')}
               </Typography>
               <Paper variant="outlined" sx={{ maxHeight: 200, overflow: 'auto' }}>
                 <List dense disablePadding>
@@ -290,7 +298,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
           {tasks.length > 0 && (
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
-                关联任务
+                {t('emotions.relatedTasks')}
               </Typography>
               <Paper variant="outlined" sx={{ maxHeight: 200, overflow: 'auto' }}>
                 <List dense disablePadding>
@@ -310,7 +318,7 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
                       </ListItemIcon>
                       <ListItemText 
                         primary={task.title} 
-                        secondary={task.completed ? '已完成' : '未完成'} 
+                        secondary={task.completed ? t('tasks.completed') : t('tasks.notCompleted')} 
                       />
                     </ListItemButton>
                   ))}
@@ -323,14 +331,14 @@ const AddEmotionModal: React.FC<AddEmotionModalProps> = ({ open, onClose, onSave
       
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={handleClose}>
-          取消
+          {t('actions.cancel')}
         </Button>
         <Button
           variant="contained"
           onClick={handleSave}
           disabled={!selectedEmotion || !note}
         >
-          保存
+          {t('actions.save')}
         </Button>
       </DialogActions>
     </Dialog>

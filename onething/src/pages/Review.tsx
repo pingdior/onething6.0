@@ -6,10 +6,12 @@ import AppLayout from '../components/layout/AppLayout';
 import ReviewCard from '../components/review/ReviewCard';
 import ReviewDetailModal from '../components/review/ReviewDetailModal';
 import GenerateReviewModal from '../components/review/GenerateReviewModal';
+import { useTranslation } from 'react-i18next';
 
 type TimeRange = 'week' | 'month' | 'custom';
 
 const Review: React.FC = () => {
+  const { t } = useTranslation();
   const goals = useGoalStore(state => state.goals);
   const tasks = useTaskStore(state => state.tasks);
   const reviews = useReviewStore(state => state.reviews);
@@ -82,21 +84,21 @@ const Review: React.FC = () => {
   };
   
   const getTimeRangeLabel = () => {
-    if (selectedTimeRange === 'week') return '本周';
-    if (selectedTimeRange === 'month') return '本月';
-    return '自定义时间段';
+    if (selectedTimeRange === 'week') return t('review.currentWeek');
+    if (selectedTimeRange === 'month') return t('review.currentMonth');
+    return t('review.customTimeRange');
   };
   
   return (
     <AppLayout>
       <div className="card">
         <div className="card-title">
-          <span>目标复盘</span>
+          <span>{t('review.title')}</span>
           <button 
             className="btn btn-primary btn-sm"
             onClick={() => setShowGenerateModal(true)}
           >
-            生成新复盘
+            {t('review.generateNew')}
           </button>
         </div>
         
@@ -106,19 +108,19 @@ const Review: React.FC = () => {
               className={`py-2 px-4 cursor-pointer ${selectedTimeRange === 'week' ? 'border-b-2 border-primary text-primary font-medium' : ''}`}
               onClick={() => setSelectedTimeRange('week')}
             >
-              周
+              {t('review.weekly')}
             </div>
             <div 
               className={`py-2 px-4 cursor-pointer ${selectedTimeRange === 'month' ? 'border-b-2 border-primary text-primary font-medium' : ''}`}
               onClick={() => setSelectedTimeRange('month')}
             >
-              月
+              {t('review.monthly')}
             </div>
             <div 
               className={`py-2 px-4 cursor-pointer ${selectedTimeRange === 'custom' ? 'border-b-2 border-primary text-primary font-medium' : ''}`}
               onClick={() => setSelectedTimeRange('custom')}
             >
-              自定义
+              {t('review.custom')}
             </div>
           </div>
           
@@ -130,7 +132,7 @@ const Review: React.FC = () => {
                 value={customDateRange.start}
                 onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
               />
-              <span>至</span>
+              <span>{t('review.to')}</span>
               <input 
                 type="date" 
                 className="border border-gray-300 rounded-md px-3 py-2"
@@ -143,7 +145,7 @@ const Review: React.FC = () => {
         
         {/* 复盘列表 */}
         <div>
-          <h3 className="text-lg font-medium mb-4">{getTimeRangeLabel()}复盘</h3>
+          <h3 className="text-lg font-medium mb-4">{getTimeRangeLabel()} {t('review.review')}</h3>
           
           {reviews.length > 0 ? (
             reviews.map(review => (
@@ -155,12 +157,12 @@ const Review: React.FC = () => {
             ))
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p className="mb-4">暂时没有复盘记录</p>
+              <p className="mb-4">{t('review.noReviews')}</p>
               <button 
                 className="btn btn-primary"
                 onClick={() => setShowGenerateModal(true)}
               >
-                生成首个复盘报告
+                {t('review.generateFirst')}
               </button>
             </div>
           )}
@@ -171,26 +173,26 @@ const Review: React.FC = () => {
       {reviews.length > 0 && reviews[0].taskAnalysis && (
         <div className="card">
           <div className="card-title">
-            <span>任务分析与优化</span>
-            <span className="text-sm text-gray-500">更多详情点击复盘查看</span>
+            <span>{t('review.taskAnalysisAndOptimization')}</span>
+            <span className="text-sm text-gray-500">{t('review.clickForDetails')}</span>
           </div>
 
           {/* 任务分析概览 */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
             <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium text-gray-700">任务表现分析</h4>
-              <div className="text-xs text-gray-500">{reviews[0].dateRange.start} 至 {reviews[0].dateRange.end}</div>
+              <h4 className="font-medium text-gray-700">{t('review.taskPerformanceAnalysis')}</h4>
+              <div className="text-xs text-gray-500">{reviews[0].dateRange.start} {t('review.to')} {reviews[0].dateRange.end}</div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <div className="text-sm font-medium text-primary mb-1">做得好的方面</div>
+                <div className="text-sm font-medium text-primary mb-1">{t('review.strengths')}</div>
                 <div className="text-sm text-gray-600 ml-1">
                   {reviews[0].taskAnalysis.strengths[0]}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-accent-color mb-1">需要改进的方面</div>
+                <div className="text-sm font-medium text-accent-color mb-1">{t('review.improvements')}</div>
                 <div className="text-sm text-gray-600 ml-1">
                   {reviews[0].taskAnalysis.improvements[0]}
                 </div>
@@ -201,7 +203,7 @@ const Review: React.FC = () => {
           {/* SOP建议概览 */}
           {reviews[0].sopRecommendations && reviews[0].sopRecommendations.length > 0 && (
             <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-700 mb-3">SOP流程优化建议</h4>
+              <h4 className="font-medium text-gray-700 mb-3">{t('review.sopRecommendations')}</h4>
               <div className="text-sm text-gray-600 mb-2">
                 <span className="font-medium">{reviews[0].sopRecommendations[0].title}</span>：
                 {reviews[0].sopRecommendations[0].steps.slice(0, 3).map((step, index) => (
@@ -214,7 +216,7 @@ const Review: React.FC = () => {
                 className="text-primary text-sm font-medium"
                 onClick={() => handleReviewClick(reviews[0])}
               >
-                查看完整建议
+                {t('review.viewFullRecommendations')}
               </button>
             </div>
           )}

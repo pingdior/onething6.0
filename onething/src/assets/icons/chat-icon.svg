@@ -1,0 +1,54 @@
+<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="聊天语音输入框" clip-path="url(#clip0_328_628)">
+<rect width="402" height="874" transform="translate(-174 -805)" fill="white"/>
+<g id="Background+HorizontalBorder+Shadow" filter="url(#filter0_d_328_628)">
+<mask id="path-1-inside-1_328_628" fill="white">
+<path d="M-160 11H210V69H-160V11Z"/>
+</mask>
+<path d="M-160 11H210V69H-160V11Z" fill="white" shape-rendering="crispEdges"/>
+<path d="M-160 12H210V10H-160V12Z" fill="#E5E7EB" mask="url(#path-1-inside-1_328_628)"/>
+<g id="Background+Shadow" filter="url(#filter1_dd_328_628)">
+<rect y="0.5" width="50" height="50" rx="25" fill="white"/>
+<g id="SVG">
+<path id="Vector" d="M25 14.5C24.2044 14.5 23.4413 14.8161 22.8787 15.3787C22.3161 15.9413 22 16.7044 22 17.5V25.5C22 26.2956 22.3161 27.0587 22.8787 27.6213C23.4413 28.1839 24.2044 28.5 25 28.5C25.7956 28.5 26.5587 28.1839 27.1213 27.6213C27.6839 27.0587 28 26.2956 28 25.5V17.5C28 16.7044 27.6839 15.9413 27.1213 15.3787C26.5587 14.8161 25.7956 14.5 25 14.5Z" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M32 23.5V25.5C32 27.3565 31.2625 29.137 29.9497 30.4497C28.637 31.7625 26.8565 32.5 25 32.5C23.1435 32.5 21.363 31.7625 20.0503 30.4497C18.7375 29.137 18 27.3565 18 25.5V23.5" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M25 32.5V36.5" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_4" d="M21 36.5H29" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<filter id="filter0_d_328_628" x="-166" y="-6.5" width="382" height="80.5" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="-1"/>
+<feGaussianBlur stdDeviation="3"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_328_628"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_328_628" result="shape"/>
+</filter>
+<filter id="filter1_dd_328_628" x="-5" y="-0.5" width="60" height="60" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_328_628"/>
+<feOffset dy="2"/>
+<feGaussianBlur stdDeviation="2"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_328_628"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect2_dropShadow_328_628"/>
+<feOffset dy="4"/>
+<feGaussianBlur stdDeviation="3"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+<feBlend mode="normal" in2="effect1_dropShadow_328_628" result="effect2_dropShadow_328_628"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_328_628" result="shape"/>
+</filter>
+<clipPath id="clip0_328_628">
+<rect width="402" height="874" fill="white" transform="translate(-174 -805)"/>
+</clipPath>
+</defs>
+</svg>

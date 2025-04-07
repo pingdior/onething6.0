@@ -5,8 +5,10 @@ import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import AddTaskModal from '../components/tasks/AddTaskModal';
 import { Task, useTaskStore } from '../store/taskStore';
 import taskDiscussService from '../services/taskDiscussService';
+import { useTranslation } from 'react-i18next';
 
 const Tasks: React.FC = () => {
+  const { t } = useTranslation();
   const [activeView, setActiveView] = useState<'timeline' | 'kanban'>('timeline');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -66,10 +68,10 @@ const Tasks: React.FC = () => {
     <AppLayout>
       <div className="card">
         <div className="card-title">
-          <span>每日任务</span>
+          <span>{t('tasks.dailyTasks')}</span>
           <div className="flex items-center gap-2">
             <span>2024-03-19</span>
-            <button className="btn btn-sm btn-secondary">日历</button>
+            <button className="btn btn-sm btn-secondary">{t('tasks.calendar')}</button>
           </div>
         </div>
         
@@ -79,13 +81,13 @@ const Tasks: React.FC = () => {
               className={`py-3 px-4 cursor-pointer ${activeView === 'timeline' ? 'border-b-2 border-primary text-primary font-medium' : ''}`}
               onClick={() => setActiveView('timeline')}
             >
-              时间线
+              {t('tasks.timeline')}
             </div>
             <div 
               className={`py-3 px-4 cursor-pointer ${activeView === 'kanban' ? 'border-b-2 border-primary text-primary font-medium' : ''}`}
               onClick={() => setActiveView('kanban')}
             >
-              看板
+              {t('tasks.kanban')}
             </div>
           </div>
           
@@ -93,19 +95,19 @@ const Tasks: React.FC = () => {
             className="btn btn-primary flex items-center gap-1"
             onClick={handleAddTask}
           >
-            <span>+</span> 添加任务
+            <span>+</span> {t('tasks.addTask')}
           </button>
         </div>
         
         <div className="flex border-b border-gray-200 mb-4">
           <div className="py-2 px-4 cursor-pointer text-gray-500 hover:text-primary">
-            💬 让AI帮我规划今天
+            💬 {t('tasks.letAIPlan')}
           </div>
         </div>
         
         {activeView === 'timeline' ? (
           <div>
-            <div className="text-sm font-semibold mb-4">上午</div>
+            <div className="text-sm font-semibold mb-4">{t('dashboard.morningTasks')}</div>
             {morningTasks.map(task => (
               <TaskItem 
                 key={task.id} 
@@ -117,7 +119,7 @@ const Tasks: React.FC = () => {
               />
             ))}
             
-            <div className="text-sm font-semibold my-4">下午</div>
+            <div className="text-sm font-semibold my-4">{t('dashboard.afternoonTasks')}</div>
             {afternoonTasks.map(task => (
               <TaskItem 
                 key={task.id} 
@@ -132,7 +134,7 @@ const Tasks: React.FC = () => {
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-4">
             <div className="flex-1 min-w-64 bg-gray-100 rounded-lg p-3">
-              <div className="font-semibold py-2 mb-3 border-b border-gray-300">待办</div>
+              <div className="font-semibold py-2 mb-3 border-b border-gray-300">{t('tasks.todo')}</div>
               
               {todoTasks.map(task => (
                 <div 
@@ -155,7 +157,7 @@ const Tasks: React.FC = () => {
                         handleEditTask(task);
                       }}
                     >
-                      ✏️ 编辑
+                      ✏️ {t('actions.edit')}
                     </button>
                     <button 
                       className="mr-2 hover:text-danger"
@@ -164,7 +166,7 @@ const Tasks: React.FC = () => {
                         handleDeleteTask(task.id);
                       }}
                     >
-                      🗑️ 删除
+                      🗑️ {t('actions.delete')}
                     </button>
                     <button 
                       className="hover:text-secondary"
@@ -173,7 +175,7 @@ const Tasks: React.FC = () => {
                         handleDiscussWithAI(task);
                       }}
                     >
-                      💬 与AI讨论
+                      💬 {t('tasks.discussWithAI')}
                     </button>
                   </div>
                 </div>
@@ -181,7 +183,7 @@ const Tasks: React.FC = () => {
             </div>
             
             <div className="flex-1 min-w-64 bg-gray-100 rounded-lg p-3">
-              <div className="font-semibold py-2 mb-3 border-b border-gray-300">进行中</div>
+              <div className="font-semibold py-2 mb-3 border-b border-gray-300">{t('tasks.inProgress')}</div>
               {inProgressTasks.map(task => (
                 <div 
                   key={task.id}
@@ -203,7 +205,7 @@ const Tasks: React.FC = () => {
                         handleEditTask(task);
                       }}
                     >
-                      ✏️ 编辑
+                      ✏️ {t('actions.edit')}
                     </button>
                     <button 
                       className="mr-2 hover:text-danger"
@@ -212,7 +214,7 @@ const Tasks: React.FC = () => {
                         handleDeleteTask(task.id);
                       }}
                     >
-                      🗑️ 删除
+                      🗑️ {t('actions.delete')}
                     </button>
                     <button 
                       className="hover:text-secondary"
@@ -221,7 +223,7 @@ const Tasks: React.FC = () => {
                         handleDiscussWithAI(task);
                       }}
                     >
-                      💬 与AI讨论
+                      💬 {t('tasks.discussWithAI')}
                     </button>
                   </div>
                 </div>
@@ -229,7 +231,7 @@ const Tasks: React.FC = () => {
             </div>
             
             <div className="flex-1 min-w-64 bg-gray-100 rounded-lg p-3">
-              <div className="font-semibold py-2 mb-3 border-b border-gray-300">已完成</div>
+              <div className="font-semibold py-2 mb-3 border-b border-gray-300">{t('tasks.completed')}</div>
               {completedTasks.map(task => (
                 <div 
                   key={task.id}
@@ -251,7 +253,7 @@ const Tasks: React.FC = () => {
                         handleEditTask(task);
                       }}
                     >
-                      ✏️ 编辑
+                      ✏️ {t('actions.edit')}
                     </button>
                     <button 
                       className="mr-2 hover:text-danger"
@@ -260,7 +262,7 @@ const Tasks: React.FC = () => {
                         handleDeleteTask(task.id);
                       }}
                     >
-                      🗑️ 删除
+                      🗑️ {t('actions.delete')}
                     </button>
                     <button 
                       className="hover:text-secondary"
@@ -269,7 +271,7 @@ const Tasks: React.FC = () => {
                         handleDiscussWithAI(task);
                       }}
                     >
-                      💬 与AI讨论
+                      💬 {t('tasks.discussWithAI')}
                     </button>
                   </div>
                 </div>

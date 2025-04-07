@@ -77,9 +77,9 @@ const LinearProgressWithLabel: React.FC<{ value: number }> = ({ value }) => (
 );
 
 // 格式化日期
-const formatDate = (dateString: string): string => {
+const formatDate = (dateString: string, language: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('zh-CN', { 
+  return date.toLocaleDateString(language, { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
@@ -132,6 +132,7 @@ const Dashboard: React.FC = () => {
   const goals = useGoalStore(state => state.goals);
   const tasks = useTaskStore(state => state.tasks);
   const navigate = useNavigate(); // 添加导航hook
+  const { t, i18n } = useTranslation(); // 添加i18n对象
   
   const [completionRate, setCompletionRate] = useState(0);
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -206,9 +207,9 @@ const Dashboard: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
           <StatsCard
-            title="整体目标完成率"
+            title={t('dashboard.goalProgress')}
             value={`${completionRate}%`}
-            subtext={`共 ${goals.length} 个目标`}
+            subtext={t('goals.subgoals', { count: goals.length })}
             icon={
               <Box position="relative" display="inline-flex">
                 <CircularProgress
@@ -242,9 +243,9 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid item xs={12} md={4}>
           <StatsCard
-            title="今日任务完成"
+            title={t('dashboard.todayTasks')}
             value={`${todayCompletedTasks}/${totalTasks}`}
-            subtext={totalTasks > 0 ? `完成率 ${Math.round((todayCompletedTasks / totalTasks) * 100)}%` : '暂无任务'}
+            subtext={totalTasks > 0 ? t('goals.completionRate', { value: Math.round((todayCompletedTasks / totalTasks) * 100) }) : t('common.empty')}
             icon={
               <Box sx={{ fontSize: '2rem' }}>
                 {todayCompletedTasks === totalTasks && totalTasks > 0 ? '🎉' : '📋'}
@@ -254,9 +255,9 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid item xs={12} md={4}>
           <StatsCard
-            title="当前情绪状态"
-            value="😊 良好"
-            subtext="比昨天提升了15%"
+            title={t('dashboard.emotionStatus')}
+            value={`😊 ${t('emotions.moodTypes.happy')}`}
+            subtext={t('dashboard.improvedComparedToYesterday', { value: '15%' })}
             icon={
               <Box sx={{ fontSize: '2rem' }}>
                 📈
@@ -278,7 +279,7 @@ const Dashboard: React.FC = () => {
               mb: 1 
             }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                优先目标
+                {t('goals.priority')}
               </Typography>
               {isMobileDevice && (
                 <Button 
@@ -290,7 +291,7 @@ const Dashboard: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
-                  查看全部
+                  {t('common.viewAll')}
                 </Button>
               )}
             </Box>
@@ -300,10 +301,10 @@ const Dashboard: React.FC = () => {
               showDetails={true}
               height={220}
               milestones={[
-                { value: 25, label: '初步规划' },
-                { value: 50, label: '半程检查点' },
-                { value: 75, label: '最终冲刺' },
-                { value: 100, label: '目标完成' },
+                { value: 25, label: t('goals.milestones.planning') },
+                { value: 50, label: t('goals.milestones.midpoint') },
+                { value: 75, label: t('goals.milestones.finalSprint') },
+                { value: 100, label: t('goals.milestones.completed') },
               ]}
             />
           </Paper>
@@ -313,7 +314,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2, borderRadius: '8px', height: '100%' }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              时间效率分析
+              {t('review.bestTimeSlots')}
             </Typography>
             <Divider sx={{ my: 1 }} />
             <TimeHeatmapChart 

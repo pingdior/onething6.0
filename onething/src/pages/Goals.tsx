@@ -12,11 +12,13 @@ import AddGoalModal from '../components/goals/AddGoalModal';
 import { Goal, useGoalStore } from '../store/goalStore';
 import { useNavigate } from 'react-router-dom';
 import { isMobile } from '../i18n';
+import { useTranslation } from 'react-i18next';
 
 type GoalFilter = 'all' | 'inProgress' | 'completed';
 type GoalSort = 'priority' | 'deadline' | 'completion';
 
 const Goals: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -103,7 +105,7 @@ const Goals: React.FC = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h5" sx={{ fontWeight: 600, color: '#1A535C' }}>
-            目标管理
+            {t('goals.management')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
@@ -112,7 +114,7 @@ const Goals: React.FC = () => {
               startIcon={<AddIcon />}
               onClick={handleOpenAddModal}
             >
-              新建目标
+              {t('goals.newGoal')}
             </Button>
           </Box>
         </Box>
@@ -121,7 +123,7 @@ const Goals: React.FC = () => {
           {/* 过滤选项 */}
           <Paper sx={{ p: 2, borderRadius: '8px', width: 200 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-              目标分类
+              {t('goals.filterTitle')}
             </Typography>
             <FormControl component="fieldset">
               <RadioGroup
@@ -131,17 +133,17 @@ const Goals: React.FC = () => {
                 <FormControlLabel
                   value="all"
                   control={<Radio />}
-                  label="所有目标"
+                  label={t('goals.allGoals')}
                 />
                 <FormControlLabel
                   value="inProgress"
                   control={<Radio />}
-                  label="进行中"
+                  label={t('goals.inProgress')}
                 />
                 <FormControlLabel
                   value="completed"
                   control={<Radio />}
-                  label="已完成"
+                  label={t('goals.completed')}
                 />
               </RadioGroup>
             </FormControl>
@@ -149,16 +151,16 @@ const Goals: React.FC = () => {
             <Divider sx={{ my: 2 }} />
             
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-              排序方式
+              {t('goals.sortTitle')}
             </Typography>
             <FormControl fullWidth size="small" variant="outlined">
               <Select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as GoalSort)}
               >
-                <MenuItem value="priority">按优先级</MenuItem>
-                <MenuItem value="deadline">按截止日期</MenuItem>
-                <MenuItem value="completion">按完成度</MenuItem>
+                <MenuItem value="priority">{t('goals.sortByPriority')}</MenuItem>
+                <MenuItem value="deadline">{t('goals.sortByDeadline')}</MenuItem>
+                <MenuItem value="completion">{t('goals.sortByCompletion')}</MenuItem>
               </Select>
             </FormControl>
           </Paper>
@@ -187,7 +189,7 @@ const Goals: React.FC = () => {
                             {goal.icon || '🎯'} {goal.title}
                           </Typography>
                           <Chip
-                            label={goal.priority === 'high' ? '高优先级' : goal.priority === 'medium' ? '中优先级' : '低优先级'}
+                            label={t(`goals.priorityLabels.${goal.priority}`)}
                             size="small"
                             sx={{
                               bgcolor: priorityColor(goal.priority),
@@ -197,7 +199,7 @@ const Goals: React.FC = () => {
                           />
                         </Box>
                         <Typography variant="body2" color="text.secondary">
-                          截止: {new Date(goal.deadline).toLocaleDateString('zh-CN', {
+                          {t('goals.deadlineLabel')}: {new Date(goal.deadline).toLocaleDateString(i18n.language, {
                             month: 'short',
                             day: 'numeric'
                           })}
@@ -206,7 +208,7 @@ const Goals: React.FC = () => {
                       
                       <Box sx={{ mt: 1, mb: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                          <Typography variant="body2">进度</Typography>
+                          <Typography variant="body2">{t('goals.progress')}</Typography>
                           <Typography variant="body2" color="text.secondary">{goal.completionRate}%</Typography>
                         </Box>
                         <Box sx={{ 
@@ -228,7 +230,7 @@ const Goals: React.FC = () => {
                       {goal.subGoals && goal.subGoals.length > 0 && (
                         <Box sx={{ mt: 1 }}>
                           <Typography variant="body2" color="text.secondary">
-                            子目标: {goal.subGoals.filter(sg => sg.completed).length}/{goal.subGoals.length}
+                            {t('goals.subgoalProgress', { completed: goal.subGoals.filter(sg => sg.completed).length, total: goal.subGoals.length })}
                           </Typography>
                         </Box>
                       )}
@@ -239,14 +241,14 @@ const Goals: React.FC = () => {
             ) : (
               <Paper sx={{ p: 3, textAlign: 'center', borderRadius: '8px' }}>
                 <Typography color="text.secondary" sx={{ mb: 2 }}>
-                  暂无目标，点击"新建目标"按钮开始
+                  {t('goals.noGoalsYet')}
                 </Typography>
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
                   onClick={handleOpenAddModal}
                 >
-                  创建第一个目标
+                  {t('goals.createFirst')}
                 </Button>
               </Paper>
             )}

@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { getAIResponse } from '../../services/aiService';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -14,6 +15,7 @@ interface Message {
 }
 
 const ChatSidebar: React.FC = () => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +29,9 @@ const ChatSidebar: React.FC = () => {
         setMessages([
           {
             id: '1',
-            text: response.text,
+            text: response.text, // AI回复通常不需要翻译，除非API支持返回多语言
             sender: 'ai',
-            suggestions: response.suggestions
+            suggestions: response.suggestions // AI建议通常不需要翻译
           }
         ]);
         setIsLoading(false);
@@ -61,9 +63,9 @@ const ChatSidebar: React.FC = () => {
       const response = await getAIResponse(input);
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.text,
+        text: response.text, // AI回复通常不需要翻译
         sender: 'ai',
-        suggestions: response.suggestions
+        suggestions: response.suggestions // AI建议通常不需要翻译
       };
       
       setMessages(prev => [...prev, aiMessage]);
@@ -72,7 +74,7 @@ const ChatSidebar: React.FC = () => {
       // 添加错误消息
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        text: '抱歉，我遇到了问题。请稍后再试。',
+        text: t('companion.errorResponse'),
         sender: 'ai'
       }]);
     } finally {
@@ -103,7 +105,7 @@ const ChatSidebar: React.FC = () => {
         gap: 1
       }}>
         <Avatar sx={{ bgcolor: 'primary.main' }}>🤖</Avatar>
-        <Typography variant="subtitle1">AI伙伴</Typography>
+        <Typography variant="subtitle1">{t('nav.companion')}</Typography>
       </Box>
       
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
@@ -148,7 +150,7 @@ const ChatSidebar: React.FC = () => {
           {isLoading && (
             <ListItem sx={{ display: 'flex', justifyContent: 'flex-start', p: 1 }}>
               <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'grey.100' }}>
-                <Typography variant="body2">正在思考...</Typography>
+                <Typography variant="body2">{t('companion.thinking')}</Typography>
               </Box>
             </ListItem>
           )}
@@ -160,7 +162,7 @@ const ChatSidebar: React.FC = () => {
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="输入消息..."
+          placeholder={t('companion.inputPlaceholder')}
           size="small"
           value={input}
           onChange={(e) => setInput(e.target.value)}

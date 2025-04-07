@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
   Button, TextField, FormControl, InputLabel, MenuItem, 
   Select, Box, Chip, Typography, IconButton, 
   CircularProgress, Alert, Stepper, Step, StepLabel,
   List, ListItem, ListItemIcon, ListItemText, Checkbox, 
-  Paper, Divider
+  Paper, Divider, FormControlLabel
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useGoalStore } from '../../store/goalStore';
 import { autoBreakdownGoal } from '../../services/aiService';
+import { useTranslation } from 'react-i18next';
 
 interface AddGoalModalProps {
   open: boolean;
@@ -20,9 +21,14 @@ interface AddGoalModalProps {
 const ICONS = ['🎯', '💪', '📚', '💼', '🏠', '🎨', '🌱', '💰', '🧠', '❤️'];
 
 const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   // 步骤控制
   const [activeStep, setActiveStep] = useState(0);
-  const steps = ['设定目标', 'AI分解目标', '确认并保存'];
+  const steps = useMemo(() => [
+    t('addGoalModal.steps.defineGoal'), 
+    t('addGoalModal.steps.aiBreakdown'), 
+    t('addGoalModal.steps.confirmAndSave')
+  ], [t]);
   
   // 目标信息
   const [title, setTitle] = useState('');
@@ -65,11 +71,11 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
     if (activeStep === 0) {
       // 验证第一步输入
       if (!title) {
-        setErrorMessage('请输入目标标题');
+        setErrorMessage(t('addGoalModal.error.missingTitle'));
         return;
       }
       if (!deadline) {
-        setErrorMessage('请选择截止日期');
+        setErrorMessage(t('addGoalModal.error.missingDeadline'));
         return;
       }
       
@@ -84,7 +90,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
     } else if (activeStep === 1) {
       // 验证是否有子目标
       if (subGoals.length === 0) {
-        setErrorMessage('请至少添加一个子目标');
+        setErrorMessage(t('addGoalModal.error.noSubGoals'));
         return;
       }
       setActiveStep(2);
@@ -117,7 +123,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
   // AI自动分解目标函数
   const handleAIBreakdown = async () => {
     if (!title) {
-      setErrorMessage('请先输入目标名称');
+      setErrorMessage(t('addGoalModal.error.missingTitleForAI'));
       return;
     }
 
@@ -132,7 +138,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
       setActiveStep(1);
     } catch (error: any) {
       setIsLoading(false);
-      setErrorMessage(`自动分解目标失败: ${error.message}`);
+      setErrorMessage(t('addGoalModal.error.aiBreakdownFailed', { error: error.message }));
     }
   };
   
@@ -195,42 +201,42 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
           <Box sx={{ mt: 2 }}>
             <TextField
               fullWidth
-              label="目标标题"
+              label={t('addGoalModal.labels.title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               margin="normal"
               required
-              helperText="请输入清晰、具体的目标标题"
+              helperText={t('addGoalModal.helpers.title')}
             />
             
             <TextField
               fullWidth
-              label="目标描述"
+              label={t('addGoalModal.labels.description')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               margin="normal"
               multiline
               rows={3}
-              helperText="描述你的目标细节，包括背景和期望达成的结果"
+              helperText={t('addGoalModal.helpers.description')}
             />
             
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
               <FormControl fullWidth margin="normal">
-                <InputLabel>优先级</InputLabel>
+                <InputLabel>{t('addGoalModal.labels.priority')}</InputLabel>
                 <Select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as 'high' | 'medium' | 'low')}
-                  label="优先级"
+                  label={t('addGoalModal.labels.priority')}
                 >
-                  <MenuItem value="high">高</MenuItem>
-                  <MenuItem value="medium">中</MenuItem>
-                  <MenuItem value="low">低</MenuItem>
+                  <MenuItem value="high">{t('goals.high')}</MenuItem>
+                  <MenuItem value="medium">{t('goals.medium')}</MenuItem>
+                  <MenuItem value="low">{t('goals.low')}</MenuItem>
                 </Select>
               </FormControl>
               
               <TextField
                 fullWidth
-                label="截止日期"
+                label={t('addGoalModal.labels.deadline')}
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
@@ -243,7 +249,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
             
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle2" gutterBottom>
-                选择图标
+                {t('addGoalModal.labels.selectIcon')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {ICONS.map((icon) => (
@@ -273,14 +279,14 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
             <Typography variant="h6" gutterBottom>
               {selectedIcon} {title}
               <Typography component="span" color="text.secondary" sx={{ ml: 1, fontSize: '0.9rem' }}>
-                ({priority === 'high' ? '高' : priority === 'medium' ? '中' : '低'}优先级)
+                ({t(`goals.priorityLabels.${priority}`)})
               </Typography>
             </Typography>
             
             <Divider sx={{ my: 2 }} />
             
             <Typography variant="subtitle1" gutterBottom>
-              子目标清单
+              {t('addGoalModal.labels.subGoalList')}
             </Typography>
             
             {/* 子目标列表 */}
@@ -326,7 +332,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
               </Paper>
             ) : (
               <Alert severity="info" sx={{ mb: 2 }}>
-                暂无子目标，请手动添加或使用AI自动分解
+                {t('addGoalModal.info.noSubGoals')}
               </Alert>
             )}
             
@@ -335,7 +341,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
               <TextField
                 fullWidth
                 size="small"
-                label="添加子目标"
+                label={t('addGoalModal.labels.addSubGoal')}
                 value={manualSubGoal}
                 onChange={(e) => setManualSubGoal(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddSubGoal()}
@@ -345,7 +351,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
                 onClick={handleAddSubGoal}
                 disabled={!manualSubGoal.trim()}
               >
-                添加
+                {t('actions.add')}
               </Button>
             </Box>
             
@@ -357,17 +363,16 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
                 startIcon={isLoading ? <CircularProgress size={20} /> : null}
                 sx={{ mt: 1 }}
               >
-                {isLoading ? '正在思考...' : '让AI重新分解目标'}
+                {isLoading ? t('addGoalModal.buttons.thinking') : t('addGoalModal.buttons.rebreakdown')}
               </Button>
             </Box>
             
             <Box sx={{ mt: 2, bgcolor: 'info.light', p: 2, borderRadius: 1 }}>
               <Typography variant="subtitle2" gutterBottom sx={{ color: 'info.dark' }}>
-                AI助手提示
+                {t('addGoalModal.info.aiHelperTitle')}
               </Typography>
               <Typography variant="body2" sx={{ color: 'info.dark' }}>
-                子目标应该是清晰可执行的小任务，每个子目标完成后，整体目标的进度会自动更新。
-                你可以根据需要添加、删除或编辑AI生成的子目标。
+                {t('addGoalModal.info.aiHelperDescription')}
               </Typography>
             </Box>
           </Box>
@@ -377,7 +382,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
         return (
           <Box sx={{ mt: 2 }}>
             <Typography variant="h6" gutterBottom>
-              确认目标信息
+              {t('addGoalModal.labels.confirmGoalInfo')}
             </Typography>
             
             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -386,7 +391,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
                   {selectedIcon} {title}
                 </Typography>
                 <Chip 
-                  label={priority === 'high' ? '高优先级' : priority === 'medium' ? '中优先级' : '低优先级'} 
+                  label={t(`goals.priorityLabels.${priority}`)} 
                   size="small" 
                   color={priority === 'high' ? 'error' : priority === 'medium' ? 'warning' : 'info'}
                   sx={{ ml: 1 }}
@@ -399,23 +404,21 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
                 </Typography>
               )}
               
-              <Typography variant="body2">
-                截止日期：{new Date(deadline).toLocaleDateString('zh-CN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                {t('addGoalModal.labels.deadline')}: {new Date(deadline).toLocaleDateString(undefined, {
+                  year: 'numeric', month: 'long', day: 'numeric'
                 })}
               </Typography>
             </Paper>
             
-            <Typography variant="subtitle1" gutterBottom>
-              子目标 ({subGoals.length})
+            <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+              {t('addGoalModal.labels.subGoalList')} ({subGoals.length})
             </Typography>
             
             <Paper variant="outlined" sx={{ mb: 2 }}>
               <List dense disablePadding>
                 {subGoals.map((subGoal, index) => (
-                  <ListItem key={subGoal.id} divider={index < subGoals.length - 1}>
+                  <ListItem key={subGoal.id} disablePadding>
                     <ListItemIcon sx={{ minWidth: 32 }}>
                       <Typography variant="body2" color="text.secondary">
                         {index + 1}.
@@ -428,7 +431,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
             </Paper>
             
             <Alert severity="success">
-              目标设置完成！点击"保存目标"按钮开始你的旅程。
+              {t('addGoalModal.info.goalSaved')}
             </Alert>
           </Box>
         );
@@ -451,9 +454,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
       <DialogTitle sx={{ pb: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6" component="div">
-            {activeStep === 0 ? '创建新目标' : 
-             activeStep === 1 ? '分解目标' : 
-             '确认目标'}
+            {t('addGoalModal.title')}
           </Typography>
           <IconButton onClick={handleClose} size="small">
             <CloseIcon fontSize="small" />
@@ -482,30 +483,23 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ open, onClose }) => {
       </DialogContent>
       
       <DialogActions sx={{ px: 3, pb: 2 }}>
+        <FormControlLabel 
+          control={<Checkbox checked={aiHelp} onChange={(e) => setAiHelp(e.target.checked)} />} 
+          label={t('addGoalModal.labels.useAiHelp')}
+          disabled={activeStep > 0}
+          sx={{ mr: 'auto' }}
+        />
+        
+        <Button onClick={handleClose}>{t('actions.cancel')}</Button>
         {activeStep > 0 && (
-          <Button 
-            onClick={handleBack}
-            disabled={isLoading}
-          >
-            上一步
-          </Button>
-        )}
-        <Box sx={{ flex: 1 }} />
-        {activeStep === 0 && (
-          <Button 
-            onClick={() => setAiHelp(!aiHelp)}
-            color="info"
-            disabled={isLoading}
-          >
-            {aiHelp ? '✓ 使用AI辅助' : '❌ 不使用AI'}
-          </Button>
+          <Button onClick={handleBack}>{t('actions.back')}</Button>
         )}
         <Button 
           variant="contained" 
           onClick={handleNext}
           disabled={isLoading}
         >
-          {activeStep === steps.length - 1 ? '保存目标' : '下一步'}
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : (activeStep === steps.length - 1 ? t('actions.save') : t('addGoalModal.buttons.next'))}
         </Button>
       </DialogActions>
     </Dialog>
