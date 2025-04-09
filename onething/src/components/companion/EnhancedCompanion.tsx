@@ -20,7 +20,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useTheme } from '@mui/material/styles';
-import { sendMessageToAI, getDefaultSystemMessage } from '../../services/aiService';
+import aiService from '../../services/aiService';
 import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
 import { isMobile } from '../../i18n';
@@ -171,8 +171,8 @@ const EnhancedCompanion: React.FC = () => {
         setIsLoading(true);
         
         // 使用已有的发送逻辑发送消息
-        sendMessageToAI([
-          getDefaultSystemMessage(),
+        aiService.sendMessageToAI([
+          aiService.getDefaultSystemMessage(),
           {
             role: 'system' as const,
             content: `这是关于用户当前状态的一些信息：${getUserContext()}`
@@ -188,7 +188,7 @@ const EnhancedCompanion: React.FC = () => {
             content: voiceInputText,
           },
         ])
-        .then(response => {
+        .then((response: string) => {
           // 移除思考中消息并添加AI回复
           setMessages(prev => {
             const filtered = prev.filter(m => m.id !== thinkingId);
@@ -208,7 +208,7 @@ const EnhancedCompanion: React.FC = () => {
             ];
           });
         })
-        .catch(error => {
+        .catch((error: Error) => {
           console.error('AI服务错误:', error);
           setMessages(prev => {
             const filtered = prev.filter(m => m.id !== thinkingId);
@@ -216,9 +216,10 @@ const EnhancedCompanion: React.FC = () => {
               ...filtered,
               {
                 id: Date.now().toString(),
-                text: '抱歉，我遇到了问题，无法处理您的请求。请稍后再试或检查您的网络连接。',
+                text: `抱歉，请求失败: ${error.message}`,
                 sender: 'ai',
                 timestamp: new Date(),
+                isError: true,
               },
             ];
           });
@@ -263,7 +264,7 @@ const EnhancedCompanion: React.FC = () => {
     try {
       // 构建发送给AI的消息上下文
       const messageHistory = [
-        getDefaultSystemMessage(),
+        aiService.getDefaultSystemMessage(),
         {
           role: 'system' as const,
           content: `这是关于用户当前状态的一些信息：${getUserContext()}`
@@ -281,7 +282,7 @@ const EnhancedCompanion: React.FC = () => {
       ];
 
       // 发送给AI服务
-      const response = await sendMessageToAI(messageHistory);
+      const response = await aiService.sendMessageToAI(messageHistory);
       
       // 移除思考中消息并添加AI回复
       setMessages(prev => {

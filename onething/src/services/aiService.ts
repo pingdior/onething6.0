@@ -2,7 +2,7 @@
  * AI服务模块，用于与DeepSeek API通信
  */
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 // 使用环境变量或默认值
 const API_CONFIG = {
@@ -33,6 +33,21 @@ export interface AIResponse {
   suggestions?: string[];
 }
 
+// 从环境变量读取配置
+const primaryApiUrl = process.env.REACT_APP_DEEPSEEK_API_URL; // 提供默认值以防万一
+const primaryApiKey = process.env.REACT_APP_DEEPSEEK_API_KEY;
+
+const backupApiUrl = process.env.REACT_APP_BACKUP_AI_API_URL;
+const backupApiKey = process.env.REACT_APP_BACKUP_AI_API_KEY;
+
+// 检查环境变量是否设置
+if (!primaryApiKey) {
+  console.warn('主 AI API Key (REACT_APP_DEEPSEEK_API_KEY) 未在 .env 文件中设置!');
+}
+if (!backupApiUrl || !backupApiKey) {
+  console.warn('备用 AI API URL 或 Key 未在 .env 文件中完全设置，备用方案可能无法启用。');
+}
+
 /**
  * 检测当前设备是否为移动设备
  */
@@ -40,172 +55,114 @@ export const isMobile = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
-/**
- * 发送消息到DeepSeek API并获取响应
- */
-export const sendMessageToAI = async (messages: Message[]): Promise<string> => {
-  try {
-    console.log('发送请求到代理服务器，消息:', messages);
-    
-    // 构建请求数据
-    const requestData = {
-      model: API_CONFIG.model,
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000
-    };
-    
-    console.log('请求数据:', JSON.stringify(requestData));
-    
-    // 构建完整URL，确保在不同环境下都能正确连接
-    let baseUrl = getBaseUrl();
-    console.log('环境:', process.env.NODE_ENV, '基础URL:', baseUrl);
-    
-    // 检测环境和设备类型来决定URL构建方式
-    const isMobileDevice = isMobile();
-    
-    // 开发环境始终需要完整URL（localhost:5005）
-    if (process.env.NODE_ENV === 'development') {
-      // 确保开发环境有正确的API URL
-      if (!baseUrl) {
-        baseUrl = 'http://localhost:5005';
-        console.log('开发环境中未找到REACT_APP_API_URL，使用默认值:', baseUrl);
-      }
-    } 
-    // 生产环境移动设备使用绝对路径
-    else if (isMobileDevice) {
-      baseUrl = window.location.origin;
-      console.log('生产环境移动设备，使用origin作为基础URL:', baseUrl);
-    }
-    // 生产环境Web端使用相对路径（空字符串）
-    
-    const fullUrl = `${baseUrl}${API_CONFIG.proxyURL}`;
-    console.log('最终请求URL:', fullUrl);
-    
-    // 使用异步等待机制，添加10秒的超时
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-    
-    try {
-      // 使用我们的自定义代理服务器
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Client-Type': 'web-production' // 添加自定义标识
-      };
-      
-      const response = await fetch(fullUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(requestData),
-        signal: controller.signal
-      });
-      
-      // 清除超时
-      clearTimeout(timeoutId);
-      
-      console.log('代理响应状态:', response.status);
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('API身份认证失败，请联系管理员更新API密钥');
-        } else if (response.status === 429) {
-          throw new Error('API请求过于频繁，请稍后再试');
-        } else {
-          throw new Error(`HTTP错误! 状态码: ${response.status}, 状态: ${response.statusText}`);
-        }
-      }
-      
-      const responseData = await response.json();
-      console.log('代理响应数据:', responseData);
+// --- 新增：通用的 API 调用函数 ---
+const makeApiCall = async (apiUrl: string, apiKey: string, messages: Message[]) => {
+  if (!apiKey) {
+    throw new Error('API Key is missing for the request.');
+  }
+  console.log(`[aiService] Making API call to: ${apiUrl}`); // 日志记录使用的URL
 
-      // 从响应中提取AI的回复
-      if (responseData && 
-          responseData.choices && 
-          responseData.choices.length > 0 && 
-          responseData.choices[0].message) {
-        return responseData.choices[0].message.content;
-      }
-      
-      // 检查响应格式
-      console.error('API响应格式不符合预期:', responseData);
-      
-      // 如果有错误信息
-      if (responseData.error) {
-        throw new Error(`API错误: ${responseData.error.message || '未知错误'}`);
-      }
-      
-      throw new Error('无效的API响应格式');
-    } catch (error: any) {
-      // 清除超时
-      clearTimeout(timeoutId);
-      throw error;
+  // 注意：这里的 model 名称可能需要根据 API 提供商调整
+  // SiliconFlow 示例使用 "deepseek-ai/DeepSeek-V3"，这可能适用于你的备份API
+  // 如果主/备用API需要不同的模型名称，这里需要更复杂的逻辑
+  const modelName = "deepseek-v3"; // 或者根据 apiUrl 动态选择
+
+  const response = await axios.post(
+    apiUrl,
+    {
+      model: modelName, // 使用模型名称
+      messages: messages,
+      // 可以在这里添加 temperature, max_tokens 等参数
+      // stream: false, // 明确指定非流式，除非你已经实现了流式处理
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
     }
-  } catch (error: any) {
-    console.error('AI通信错误:', error);
-    
-    // 处理AbortError（超时）
-    if (error.name === 'AbortError') {
-      console.error('请求超时已中止');
-    }
-    
-    // 为所有设备类型提供重试逻辑，不仅限于移动设备
-    console.log('尝试替代请求方式');
+  );
+
+  // 假设非流式响应结构是 { choices: [ { message: { content: '...' } } ] }
+  // 请根据实际 API 返回结构调整
+  if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message) {
+    return response.data.choices[0].message.content;
+  } else {
+    console.error('Unexpected API response structure:', response.data);
+    throw new Error('未能从 AI 回复中提取内容。');
+  }
+};
+
+// --- 修改：核心消息发送函数，增加备用逻辑 ---
+const sendMessageToAI = async (messages: Message[]): Promise<string> => {
+  // 1. 尝试使用主 API
+  if (primaryApiKey && primaryApiUrl) {
     try {
-      // 使用与原始请求相同的数据
-      const originalRequestData = { 
-        model: API_CONFIG.model,
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 1000
-      };
-      
-      // 创建新的AbortController和超时
-      const retryController = new AbortController();
-      const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
-      
-      try {
-        // 使用简化的fetch请求再试一次，显式指定完整URL
-        // 确保开发环境使用正确的API URL
-        const baseUrl = process.env.NODE_ENV === 'development' 
-          ? (process.env.REACT_APP_API_URL || 'http://localhost:5005')
-          : window.location.origin;
-        
-        const simpleResponse = await fetch(`${baseUrl}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(originalRequestData),
-          signal: retryController.signal,
-          // 不使用缓存，强制新请求
-          cache: 'no-store'
+      console.log('[aiService] Attempting primary API...');
+      return await makeApiCall(primaryApiUrl, primaryApiKey, messages);
+    } catch (error) {
+      console.error('[aiService] Primary API call failed:', error);
+
+      // 检查是否是特定的配额错误或其他应触发备用的错误
+      let shouldUseBackup = false;
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<any>; // 类型断言以便访问 response
+        const errorCode = axiosError.response?.data?.error?.code;
+        const errorMessage = axiosError.response?.data?.error?.message;
+
+        console.log('[aiService] Primary API Error Details:', {
+          status: axiosError.response?.status,
+          code: errorCode,
+          message: errorMessage,
         });
-        
-        // 清除超时
-        clearTimeout(retryTimeoutId);
-        
-        if (!simpleResponse.ok) {
-          throw new Error(`重试失败! 状态码: ${simpleResponse.status}`);
+
+        // 在这里定义触发备用的条件，例如配额错误码或特定消息
+        if (errorCode === '20031' || (errorMessage && errorMessage.includes('not enough quota'))) {
+          console.log('[aiService] Quota error detected on primary API.');
+          shouldUseBackup = true;
         }
-        
-        const retryData = await simpleResponse.json();
-        if (retryData && 
-            retryData.choices && 
-            retryData.choices.length > 0 && 
-            retryData.choices[0].message) {
-          return retryData.choices[0].message.content;
-        }
-        
-        throw new Error('重试后响应格式依然无效');
-      } catch (retryErr) {
-        // 清除超时
-        clearTimeout(retryTimeoutId);
-        throw retryErr;
+        // 你可以根据需要添加其他错误条件，例如 5xx 服务器错误
+        // else if (axiosError.response?.status && axiosError.response.status >= 500) {
+        //   console.log('[aiService] Primary API server error detected.');
+        //   shouldUseBackup = true;
+        // }
       }
-    } catch (retryError: any) {
-      console.error('重试请求失败:', retryError);
-      // 返回备用响应而不是抛出错误，以防止应用崩溃
-      return "很抱歉，我暂时无法回复。与AI助手通信时出现问题，请检查您的网络连接或稍后再试。";
+
+      if (shouldUseBackup) {
+        // 2. 如果主 API 因特定错误失败，并且备用配置存在，则尝试备用 API
+        if (backupApiUrl && backupApiKey) {
+          console.warn('[aiService] Switching to backup API...');
+          try {
+            return await makeApiCall(backupApiUrl, backupApiKey, messages);
+          } catch (backupError) {
+            console.error('[aiService] Backup API call also failed:', backupError);
+            // 如果备用也失败，抛出原始错误或特定错误
+            throw new Error(`主 AI 服务失败，备用服务也失败: ${backupError instanceof Error ? backupError.message : String(backupError)}`);
+          }
+        } else {
+          console.error('[aiService] Primary API failed, but backup API config is missing.');
+          // 如果没有备用配置，则抛出原始错误
+          throw error; // 或者抛出一个更具体的错误
+        }
+      } else {
+        // 如果不是需要切换的错误类型，直接抛出原始错误
+         throw error;
+      }
     }
+  } else {
+     // 如果连主 API 配置都没有，直接报错或尝试备用（如果存在）
+     console.error('[aiService] Primary API config is missing.');
+     if (backupApiUrl && backupApiKey) {
+       console.warn('[aiService] Primary config missing, attempting backup API directly...');
+       try {
+         return await makeApiCall(backupApiUrl, backupApiKey, messages);
+       } catch (backupError) {
+         console.error('[aiService] Backup API call failed:', backupError);
+         throw new Error(`主 AI 配置缺失，备用服务也失败: ${backupError instanceof Error ? backupError.message : String(backupError)}`);
+       }
+     } else {
+       throw new Error('主 AI 服务配置缺失，且无备用配置。');
+     }
   }
 };
 
@@ -398,9 +355,30 @@ export const autoBreakdownGoal = async (goal: string, description: string): Prom
   }
 };
 
+// --- 新增：独立的备用 API 测试函数 ---
+const testBackupApi = async (testMessages: Message[]): Promise<string | { error: string }> => {
+  if (!backupApiUrl || !backupApiKey) {
+    console.error('[aiService] Backup API config is missing for testing.');
+    return { error: '备用 API 配置缺失，无法测试。' };
+  }
+
+  console.log('[aiService] Testing Backup API explicitly...');
+  try {
+    // 直接调用 makeApiCall 使用备用配置
+    const result = await makeApiCall(backupApiUrl, backupApiKey, testMessages);
+    console.log('[aiService] Backup API Test successful:', result);
+    return result; // 返回成功结果
+  } catch (error) {
+    console.error('[aiService] Backup API Test failed:', error);
+    // 返回错误信息
+    return { error: `备用 API 测试失败: ${error instanceof Error ? error.message : String(error)}` };
+  }
+};
+
 export default {
   sendMessageToAI,
   getDefaultSystemMessage,
   testAPIConnection,
-  autoBreakdownGoal
+  autoBreakdownGoal,
+  testBackupApi
 }; 

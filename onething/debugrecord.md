@@ -779,3 +779,50 @@
 
 ### 总结
 本次修复进一步完善了应用的国际化覆盖范围，确保了模态框组件的多语言支持。开发过程中应持续注意避免硬编码文本，优先使用国际化方案。
+
+## 2025-04-08：修复 `addTask` 调用签名错误及未使用导入
+
+**问题描述：**
+
+在为 Task 添加 `date` 属性并修改 `taskStore.ts` 中的 `addTask` 函数签名后，`npm start` 编译时出现 TypeScript 错误：
+
+1.  `src/components/layout/ChatSidebar.tsx`: 调用 `addTask` 时未传递必需的 `date` 属性。
+2.  `src/components/tasks/AddTaskModal.tsx`: 调用 `addTask` 时未传递必需的 `date` 属性。
+3.  `src/pages/Tasks.tsx`: 在尝试传递 `selectedDate` 给 `AddTaskModal` 时报错，因为它在 `AddTaskModalProps` 中不存在（说明之前的修改未完全应用）。
+4.  `src/pages/Tasks.tsx`: 存在未使用的导入 `useEffect` 和 `format`。
+
+**错误日志：**
+
+```
+ERROR in src/components/layout/ChatSidebar.tsx:213:30
+TS2345: Argument of type 'Omit<Task, "id">' is not assignable to parameter of type 'Omit<Task, "id" | "date"> & { date: string | Date; }'.
+  Type 'Omit<Task, "id">' is not assignable to type '{ date: string | Date; }'.
+    Types of property 'date' are incompatible.
+      Type 'string | Date | undefined' is not assignable to type 'string | Date'.
+        Type 'undefined' is not assignable to type 'string | Date'.
+
+ERROR in src/components/tasks/AddTaskModal.tsx:39:15
+TS2345: Argument of type '{ title: string; time: string; completed: false; timeRange: { start: string; end: string; }; }' is not assignable to parameter of type 'Omit<Task, "id" | "date"> & { date: string | Date; }'.
+  Property 'date' is missing in type '{ title: string; time: string; completed: false; timeRange: { start: string; end: string; }; }' but required in type '{ date: string | Date; }'.
+
+src/pages/Tasks.tsx
+  Line 1:27:   'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  Line 13:10:  'format' is defined but never used     @typescript-eslint/no-unused-vars
+```
+
+**修复过程：**
+
+1.  **修改 `AddTaskModal.tsx`**: 
+    *   为其 Props 接口 `AddTaskModalProps` 添加了必需的 `selectedDate: Date` 属性。
+    *   在组件函数中接收 `selectedDate`。
+    *   在 `handleSubmit` 函数中调用 `addTask` 时，将 `selectedDate` 加入传递的对象中。
+2.  **修改 `Tasks.tsx`**: 
+    *   在渲染 `<AddTaskModal>` 组件时，将 `selectedDate` 状态变量作为 prop 传递给它。
+    *   移除了未使用的 `useEffect` 和 `format` 导入。
+3.  **修改 `ChatSidebar.tsx`**: 
+    *   导入 `startOfDay` from `date-fns`。
+    *   在 `handleAddTask` 函数中调用 `addTask` 时，在传递的任务对象中添加 `date: startOfDay(new Date())`，确保通过聊天创建的任务关联到当天日期。
+
+**结果：**
+
+编译错误和警告已解决。通过弹窗和聊天添加的任务现在都能正确关联日期。

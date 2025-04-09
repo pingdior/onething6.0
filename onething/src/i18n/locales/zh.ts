@@ -15,6 +15,7 @@ export default {
     success: '成功',
     confirm: '确认',
     cancel: '取消',
+    today: '今天',
   },
   
   // 导航菜单
@@ -98,7 +99,12 @@ export default {
     todo: '待办',
     inProgress: '进行中',
     completed: '已完成',
-    discussWithAI: '与AI讨论'
+    discussWithAI: '与AI讨论',
+    noTasksMorning: '上午暂无任务',
+    noTasksAfternoon: '下午暂无任务',
+    noTasksTodo: '待办列表为空',
+    noTasksInProgress: '进行中列表为空',
+    noTasksCompleted: '已完成列表为空',
   },
   
   // 情绪页面

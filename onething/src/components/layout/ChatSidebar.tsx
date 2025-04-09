@@ -5,6 +5,7 @@ import aiService, { Message as AIMessage } from '../../services/aiService';
 import { useTaskStore, Task } from '../../store/taskStore';
 import taskDiscussService, { TaskDiscussEvent } from '../../services/taskDiscussService';
 import CompanionInfoDialog from '../companion/CompanionInfoDialog';
+import { startOfDay } from 'date-fns';
 
 // 消息类型定义
 interface ChatMessage {
@@ -209,8 +210,8 @@ const ChatSidebar: React.FC = () => {
     };
     
     try {
-      // 添加到任务存储中
-      const taskId = addTask(newTask);
+      // 添加到任务存储中，并附带当前日期
+      const taskId = addTask({...newTask, date: startOfDay(new Date()) });
       console.log('任务添加成功，ID:', taskId);
       
       return {

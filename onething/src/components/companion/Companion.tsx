@@ -5,7 +5,7 @@ import {
   Alert
 } from '@mui/material';
 import { SendRounded, AutoAwesomeRounded, WifiOff } from '@mui/icons-material';
-import { sendMessageToAI, getDefaultSystemMessage, Message, getAIResponse, AIResponse } from '../../services/aiService';
+import aiService, { Message, AIResponse } from '../../services/aiService';
 
 interface CompanionProps {
   onClose?: () => void;
@@ -97,7 +97,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       
       // 构建会话历史
       const conversationHistory: Message[] = [
-        getDefaultSystemMessage(),
+        aiService.getDefaultSystemMessage(),
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
           content: msg.text
@@ -106,7 +106,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       ];
       
       // 使用sendMessageToAI而不是getAIResponse
-      const aiResponseText = await sendMessageToAI(conversationHistory);
+      const aiResponseText = await aiService.sendMessageToAI(conversationHistory);
       
       // 提取回复中的建议
       const extractedSuggestions = extractSuggestions(aiResponseText);

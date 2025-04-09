@@ -5,6 +5,7 @@ import { useGoalStore } from './goalStore';
 export interface Task {
   id: string;
   title: string;
+  date?: string | Date;
   time: string;
   completed: boolean;
   goalId?: string;
@@ -20,7 +21,7 @@ export interface Task {
 
 interface TaskState {
   tasks: Task[];
-  addTask: (task: Omit<Task, 'id'>) => string;
+  addTask: (task: Omit<Task, 'id' | 'date'> & { date: string | Date }) => string;
   updateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
   removeTask: (id: string) => void;
   toggleTaskCompletion: (id: string) => void;
@@ -36,6 +37,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '1',
           title: '优化OneThing应用UI',
+          date: '2024-03-19',
           time: '9:00-11:00',
           completed: true,
           goalId: '1',
@@ -50,6 +52,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '2',
           title: '编写ProductHunt发布材料',
+          date: '2024-03-19',
           time: '11:00-12:30',
           completed: false,
           goalId: '1',
@@ -64,6 +67,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '3',
           title: '回复产品合作邮件',
+          date: '2024-03-19',
           time: '13:00-14:00',
           completed: true,
           priority: 'medium',
@@ -76,6 +80,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '4',
           title: '有氧运动45分钟',
+          date: '2024-03-19',
           time: '15:00-16:00',
           completed: false,
           goalId: '2',
@@ -90,6 +95,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '5',
           title: '测试视频制作自动化流程',
+          date: '2024-03-20',
           time: '16:30-18:00',
           completed: false,
           goalId: '3',
@@ -104,6 +110,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '6',
           title: '记录今日饮食清单',
+          date: '2024-03-20',
           time: '20:00-20:30',
           completed: false,
           goalId: '2',
@@ -118,6 +125,7 @@ export const useTaskStore = create<TaskState>()(
         {
           id: '7',
           title: '写视频文案模板',
+          date: '2024-03-20',
           time: '21:00-22:00',
           completed: true,
           goalId: '3',
@@ -135,8 +143,19 @@ export const useTaskStore = create<TaskState>()(
         const id = Date.now().toString();
         const allTasks = get().tasks;
         
+        const taskDateString = typeof task.date === 'string' ? task.date : task.date.toISOString().split('T')[0];
+
+        console.log('[taskStore] Adding new task:', {
+          taskDateString,
+          taskData: task,
+          existingTasksCount: allTasks.length
+        });
+
         let order = 0;
         const timeSlotTasks = allTasks.filter(t => {
+          const tDateString = typeof t.date === 'string' ? t.date : t.date?.toISOString().split('T')[0];
+          if (tDateString !== taskDateString) return false;
+
           const taskTimeStart = t.timeRange?.start?.split(':')[0] || '';
           const newTaskTimeStart = task.timeRange?.start?.split(':')[0] || '';
           return taskTimeStart === newTaskTimeStart;
@@ -146,7 +165,7 @@ export const useTaskStore = create<TaskState>()(
           order = Math.max(...timeSlotTasks.map(t => t.order || 0)) + 1;
         }
         
-        let finalTask = { ...task, id, order };
+        let finalTask: Task = { ...task, id, order, date: taskDateString };
         if (task.goalId) {
           const goal = useGoalStore.getState().getGoalById(task.goalId);
           if (goal) {
@@ -154,17 +173,40 @@ export const useTaskStore = create<TaskState>()(
           }
         }
         
+        console.log('[taskStore] State before addTask:', get().tasks);
         set((state) => ({
           tasks: [...state.tasks, finalTask]
         }));
+        console.log('[taskStore] State after addTask:', get().tasks);
         
-        syncGoalProgress();
+        try {
+          console.log('[taskStore] Calling syncGoalProgress...');
+          syncGoalProgress();
+          console.log('[taskStore] syncGoalProgress finished.');
+        } catch (syncError) {
+          console.error('[taskStore] Error during syncGoalProgress:', syncError);
+        }
+        
+        try {
+          localStorage.setItem('tasks-storage', JSON.stringify({
+            state: { tasks: get().tasks },
+            version: 0
+          }));
+          console.log('[taskStore] Tasks manually saved to localStorage');
+        } catch (storageError) {
+          console.error('[taskStore] Error saving to localStorage:', storageError);
+        }
         
         return id;
       },
 
       updateTask: (id, updates) => {
         let finalUpdates = { ...updates };
+        if (updates.date) {
+          finalUpdates.date = typeof updates.date === 'string' 
+            ? updates.date 
+            : updates.date.toISOString().split('T')[0];
+        }
         if (updates.goalId) {
           const goal = useGoalStore.getState().getGoalById(updates.goalId);
           if (goal) {

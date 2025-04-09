@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import TaskItem from '../components/tasks/TaskItem';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
@@ -6,6 +6,11 @@ import AddTaskModal from '../components/tasks/AddTaskModal';
 import { Task, useTaskStore } from '../store/taskStore';
 import taskDiscussService from '../services/taskDiscussService';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { isSameDay, startOfDay } from 'date-fns';
 
 const Tasks: React.FC = () => {
   const { t } = useTranslation();
@@ -13,26 +18,71 @@ const Tasks: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
   
-  // 从状态管理获取任务和操作函数
-  const tasks = useTaskStore(state => state.tasks);
+  // 从状态管理获取所有任务
+  const allTasks = useTaskStore(state => state.tasks);
   const removeTask = useTaskStore(state => state.removeTask);
   
-  // 按时间段分组任务
-  const morningTasks = tasks.filter(task => {
+  // 添加一个刷新状态，用于强制组件重新渲染
+  const [refreshFlag, setRefreshFlag] = useState(0);
+
+  // 监听任务添加/更新，触发刷新
+  useEffect(() => {
+    // 监听 localStorage 变化
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'tasks-storage') {
+        console.log('[Tasks.tsx] Detected localStorage change, refreshing component');
+        setRefreshFlag(prev => prev + 1);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // 添加任务成功后回调
+  const handleTaskAdded = () => {
+    console.log('[Tasks.tsx] Task added, refreshing component');
+    setRefreshFlag(prev => prev + 1);
+  };
+  
+  // --- Add Logs for Debugging --- 
+  console.log('[Tasks.tsx] allTasks from store:', allTasks);
+  console.log('[Tasks.tsx] selectedDate:', selectedDate);
+  // --- End Logs --- 
+  
+  // 筛选选定日期的任务
+  const tasksForSelectedDay = allTasks.filter(task => {
+    // --- Add Log inside filter --- 
+    const isMatch = task.date && isSameDay(new Date(task.date), selectedDate);
+    // console.log(`[Tasks.tsx] Filtering task '${task.title}' (date: ${task.date}) against ${selectedDate.toISOString().split('T')[0]}. Match: ${isMatch}`); // Optional: Log each task check
+    // --- End Log --- 
+    return isMatch;
+  });
+  
+  // --- Add Log for Filtered Tasks --- 
+  console.log('[Tasks.tsx] tasksForSelectedDay:', tasksForSelectedDay);
+  // --- End Log --- 
+  
+  // 按时间段分组选定日期的任务
+  const morningTasks = tasksForSelectedDay.filter(task => {
     const startHour = task.timeRange?.start ? parseInt(task.timeRange.start.split(':')[0]) : 0;
     return startHour < 12;
   });
   
-  const afternoonTasks = tasks.filter(task => {
+  const afternoonTasks = tasksForSelectedDay.filter(task => {
     const startHour = task.timeRange?.start ? parseInt(task.timeRange.start.split(':')[0]) : 0;
     return startHour >= 12;
   });
   
-  // 按状态分组任务（用于看板视图）
-  const todoTasks = tasks.filter(task => !task.completed);
-  const inProgressTasks: Task[] = []; // 这里可以根据实际需求添加"进行中"的判断逻辑
-  const completedTasks = tasks.filter(task => task.completed);
+  // 按状态分组选定日期的任务（用于看板视图）
+  const todoTasks = tasksForSelectedDay.filter(task => !task.completed);
+  const inProgressTasks: Task[] = [];
+  const completedTasks = tasksForSelectedDay.filter(task => task.completed);
   
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -64,15 +114,45 @@ const Tasks: React.FC = () => {
     taskDiscussService.discussTask(task);
   };
 
+  // --- Date handling functions ---
+  const handleDateChange = (newDate: Date | null) => {
+    if (newDate) {
+      setSelectedDate(startOfDay(newDate));
+    }
+  };
+
+  const goToToday = () => {
+    setSelectedDate(startOfDay(new Date()));
+  };
+  // --- End Date handling functions ---
+
   return (
     <AppLayout>
       <div className="card">
         <div className="card-title">
           <span>{t('tasks.dailyTasks')}</span>
-          <div className="flex items-center gap-2">
-            <span>2024-03-19</span>
-            <button className="btn btn-sm btn-secondary">{t('tasks.calendar')}</button>
-          </div>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <div className="flex items-center gap-2">
+              <DatePicker 
+                value={selectedDate} 
+                onChange={handleDateChange}
+                slotProps={{ textField: { size: 'small', sx: { width: '150px' } } }} 
+                format="yyyy-MM-dd"
+              />
+              <Button variant="outlined" size="small" onClick={goToToday}>
+                {t('common.today')} 
+              </Button>
+              <Button 
+                 variant="contained" 
+                 size="small" 
+                 startIcon={<span>+</span>}
+                 onClick={handleAddTask}
+                 className="ml-auto"
+              >
+                 {t('tasks.addTask')}
+              </Button>
+            </div>
+          </LocalizationProvider>
         </div>
         
         <div className="flex items-center justify-between mb-4">
@@ -90,13 +170,6 @@ const Tasks: React.FC = () => {
               {t('tasks.kanban')}
             </div>
           </div>
-          
-          <button 
-            className="btn btn-primary flex items-center gap-1"
-            onClick={handleAddTask}
-          >
-            <span>+</span> {t('tasks.addTask')}
-          </button>
         </div>
         
         <div className="flex border-b border-gray-200 mb-4">
@@ -108,7 +181,7 @@ const Tasks: React.FC = () => {
         {activeView === 'timeline' ? (
           <div>
             <div className="text-sm font-semibold mb-4">{t('dashboard.morningTasks')}</div>
-            {morningTasks.map(task => (
+            {morningTasks.length > 0 ? morningTasks.map(task => (
               <TaskItem 
                 key={task.id} 
                 task={task} 
@@ -117,10 +190,10 @@ const Tasks: React.FC = () => {
                 onEdit={() => handleEditTask(task)}
                 onDiscussWithAI={() => handleDiscussWithAI(task)}
               />
-            ))}
+            )) : <p className="text-gray-500 text-sm">{t('tasks.noTasksMorning')}</p>}
             
             <div className="text-sm font-semibold my-4">{t('dashboard.afternoonTasks')}</div>
-            {afternoonTasks.map(task => (
+            {afternoonTasks.length > 0 ? afternoonTasks.map(task => (
               <TaskItem 
                 key={task.id} 
                 task={task} 
@@ -129,14 +202,13 @@ const Tasks: React.FC = () => {
                 onEdit={() => handleEditTask(task)}
                 onDiscussWithAI={() => handleDiscussWithAI(task)}
               />
-            ))}
+            )) : <p className="text-gray-500 text-sm">{t('tasks.noTasksAfternoon')}</p>}
           </div>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-4">
             <div className="flex-1 min-w-64 bg-gray-100 rounded-lg p-3">
               <div className="font-semibold py-2 mb-3 border-b border-gray-300">{t('tasks.todo')}</div>
-              
-              {todoTasks.map(task => (
+              {todoTasks.length > 0 ? todoTasks.map(task => (
                 <div 
                   key={task.id}
                   className="bg-white rounded-md p-3 mb-3 shadow-sm cursor-grab"
@@ -179,12 +251,12 @@ const Tasks: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+              )) : <p className="text-gray-500 text-sm">{t('tasks.noTasksTodo')}</p>}
             </div>
             
             <div className="flex-1 min-w-64 bg-gray-100 rounded-lg p-3">
               <div className="font-semibold py-2 mb-3 border-b border-gray-300">{t('tasks.inProgress')}</div>
-              {inProgressTasks.map(task => (
+              {inProgressTasks.length > 0 ? inProgressTasks.map(task => (
                 <div 
                   key={task.id}
                   className="bg-white rounded-md p-3 mb-3 shadow-sm cursor-grab"
@@ -227,12 +299,12 @@ const Tasks: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+              )) : <p className="text-gray-500 text-sm">{t('tasks.noTasksInProgress')}</p>}
             </div>
             
             <div className="flex-1 min-w-64 bg-gray-100 rounded-lg p-3">
               <div className="font-semibold py-2 mb-3 border-b border-gray-300">{t('tasks.completed')}</div>
-              {completedTasks.map(task => (
+              {completedTasks.length > 0 ? completedTasks.map(task => (
                 <div 
                   key={task.id}
                   className="bg-gray-100 rounded-md p-3 mb-3 shadow-sm cursor-grab line-through text-gray-500"
@@ -275,7 +347,7 @@ const Tasks: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+              )) : <p className="text-gray-500 text-sm">{t('tasks.noTasksCompleted')}</p>}
             </div>
           </div>
         )}
@@ -286,13 +358,18 @@ const Tasks: React.FC = () => {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAIPlan={() => console.log("AI规划")}
+        selectedDate={selectedDate}
+        onTaskAdded={handleTaskAdded}
       />
       
       {/* 任务详情弹窗 */}
       {selectedTask && showDetailModal && (
         <TaskDetailModal
           task={selectedTask}
-          onClose={() => setShowDetailModal(false)}
+          onClose={() => { 
+            setShowDetailModal(false); 
+            setSelectedTask(null);
+          }}
         />
       )}
     </AppLayout>

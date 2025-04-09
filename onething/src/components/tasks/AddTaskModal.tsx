@@ -18,26 +18,40 @@ interface AddTaskModalProps {
   open: boolean;
   onClose: () => void;
   onAIPlan?: () => void;
+  selectedDate: Date;
+  onTaskAdded?: () => void;
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onAIPlan }) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onAIPlan, selectedDate, onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const addTask = useTaskStore(state => state.addTask);
   
   const handleSubmit = (e?: React.FormEvent) => {
+    console.log('[AddTaskModal] handleSubmit called, event:', e ? 'Event exists' : 'No event'); 
+    console.log('[AddTaskModal] Form data:', { title, startTime, endTime, selectedDate });
+    
     if (e) e.preventDefault();
     
     if (!title || !startTime || !endTime) {
+      console.log('[AddTaskModal] Validation failed - missing required fields');
       return;
     }
     
     const timeString = `${startTime}-${endTime}`;
     
+    console.log('[AddTaskModal] Calling addTask with data:', { 
+      title, 
+      date: selectedDate, 
+      time: timeString,
+      timeRange: { start: startTime, end: endTime }
+    });
+    
     try {
       addTask({
         title,
+        date: selectedDate,
         time: timeString,
         completed: false,
         timeRange: {
@@ -45,9 +59,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onAIPlan }) 
           end: endTime
         }
       });
+      console.log('[AddTaskModal] addTask completed successfully');
       handleClose();
+      if (onTaskAdded) {
+        console.log('[AddTaskModal] Calling onTaskAdded callback');
+        onTaskAdded();
+      }
     } catch (error) {
-      console.error('添加任务失败:', error);
+      console.error('[AddTaskModal] 添加任务失败:', error);
+      alert(`添加任务失败: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
   
@@ -82,7 +102,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onAIPlan }) 
       <Divider />
       
       <DialogContent sx={{ pt: 2 }}>
-        <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Box 
+          component="form" 
+          onSubmit={handleSubmit} 
+          id="add-task-form"
+          noValidate
+        >
           <TextField
             margin="normal"
             required
@@ -147,7 +172,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onAIPlan }) 
         </Button>
         <Button
           variant="contained"
-          onClick={handleSubmit}
+          type="submit"
+          form="add-task-form"
           disabled={!title || !startTime || !endTime}
         >
           添加
