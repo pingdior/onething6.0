@@ -22,9 +22,9 @@ jobs:
     - name: Install dependencies
       run: |
         cd onething
-        echo "Cleaning previous node_modules and package-lock..."
-        rm -rf node_modules package-lock.json # 强制清理
-        npm ci --legacy-peer-deps
+        echo "Cleaning previous node_modules..."
+        rm -rf node_modules # 只清理 node_modules，保留 package-lock.json
+        npm ci --legacy-peer-deps # 使用 package-lock.json 进行干净安装
         
     - name: Build project
       env:
