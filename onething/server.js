@@ -86,6 +86,23 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/onething'
 // DeepSeek API代理
 app.post('/api/chat', async (req, res) => {
   try {
+    // --- 添加生产调试日志 ---
+    const receivedMessages = req.body.messages;
+    if (Array.isArray(receivedMessages)) {
+       console.log(`[PROD /api/chat] Received ${receivedMessages.length} messages.`);
+       if (receivedMessages.length > 0) {
+         const lastMsg = receivedMessages[receivedMessages.length - 1];
+         console.log(`[PROD /api/chat] Last msg role: ${lastMsg?.role}, content start: ${String(lastMsg?.content).substring(0,30)}`);
+       }
+       if (receivedMessages.length > 1) {
+         const secondLastMsg = receivedMessages[receivedMessages.length - 2];
+         console.log(`[PROD /api/chat] Second last msg role: ${secondLastMsg?.role}, content start: ${String(secondLastMsg?.content).substring(0,30)}`);
+       }
+    } else {
+       console.error('[PROD /api/chat] Received invalid messages format:', req.body.messages);
+    }
+    // --- 结束生产调试日志 ---
+
     console.log('收到前端请求:', JSON.stringify(req.body).substring(0, 200) + '...');
     
     // 检查是否开启模拟响应模式

@@ -74,10 +74,10 @@ const ChatSidebar: React.FC = () => {
       const systemMessage = aiService.getDefaultSystemMessage();
 
       // 2. 获取最近的、非错误的聊天记录 (例如最近10条)
-      const historyLimit = 10;
+      const historyLimit = 6; // 大幅减少历史记录长度
       const recentValidMessages = messages
-        .filter(msg => !(msg.sender === 'ai' && msg.text.includes('非常抱歉，AI服务目前无法连接'))) // 过滤掉 AI 错误消息
-        .slice(-historyLimit); // 只取最后 N 条
+        .filter(msg => !(msg.sender === 'ai' && msg.text.includes('非常抱歉，AI服务目前无法连接'))) // 保持过滤
+        .slice(-historyLimit);
 
       // 3. 准备发送给 API 的消息数组
       const apiMessages = [
