@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+
+## 关键文件路径
+项目代码文件路径：/Volumes/project/software/onething6.0/onething
+项目README.md: /Volumes/project/software/onething6.0/README.md
+项目产品需求说明书：/Volumes/project/software/onething6.0/onething/doc/prd.md
+
+## 部署方式
+生产环境：通过github action来持续部署在阿里云服务上，通过nginx来分发。
+开发环境：部署在本地苹果M2设备上，没有涉及到nginx的分发。

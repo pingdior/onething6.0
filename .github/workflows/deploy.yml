@@ -25,6 +25,8 @@ jobs:
         npm ci --legacy-peer-deps
         
     - name: Build project
+      env:
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || '' }}
       run: |
         cd onething
         CI=false npm run build
@@ -64,15 +66,13 @@ jobs:
           sed -i 's/MONGO_PASSWORD=.*/MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}/' .env && \
           sed -i 's/MONGO_USER=.*/MONGO_USER=${{ secrets.MONGO_USER }}/' .env && \
           sed -i "s/PORT=.*/PORT=${{ secrets.PORT || '5005' }}/" .env && \
-          sed -i "s/REACT_APP_API_URL=.*/REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL || '' }}/" .env && \
-        # 使用sed替换环境变量，如果不存在则追加
-          sed -i "s/^NODE_ENV=.*$/NODE_ENV=${{ secrets.NODE_ENV }}/" .env || \
-          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env && \
-          sed -i "s/^DEEPSEEK_API_KEY=.*$/DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}/" .env || \
-          echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> .env && \ 
+          sed -i "s/^NODE_ENV=.*$/NODE_ENV=production/" .env && \
+          if grep -q \"^DEEPSEEK_API_KEY=\" .env; then sed -i \"s/^DEEPSEEK_API_KEY=.*$/DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}/\" .env; else echo \"DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}\" >> .env; fi && \
+          if grep -q \"^BACKUP_AI_API_URL=\" .env; then sed -i \"s|^BACKUP_AI_API_URL=.*$|BACKUP_AI_API_URL=${{ secrets.BACKUP_AI_API_URL }}|\" .env; else echo \"BACKUP_AI_API_URL=${{ secrets.BACKUP_AI_API_URL }}\" >> .env; fi && \
+          if grep -q \"^BACKUP_AI_API_KEY=\" .env; then sed -i \"s/^BACKUP_AI_API_KEY=.*$/BACKUP_AI_API_KEY=${{ secrets.BACKUP_AI_API_KEY }}/\" .env; else echo \"BACKUP_AI_API_KEY=${{ secrets.BACKUP_AI_API_KEY }}\" >> .env; fi && \
           cp ecosystem.config.js . && \
           pm2 delete onething || true && \
           pm2 start ecosystem.config.js --env production && \
           pm2 save"
         
-        echo "部署完成! 请确保Nginx正确配置了5005端口的代理"
+        echo "部署完成! 请确保Nginx正确配置了后端端口 (${{ secrets.PORT || '5005' }}) 的代理"
