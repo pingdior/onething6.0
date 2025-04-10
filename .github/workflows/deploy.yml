@@ -22,6 +22,8 @@ jobs:
     - name: Install dependencies
       run: |
         cd onething
+        echo "Cleaning previous node_modules and package-lock..."
+        rm -rf node_modules package-lock.json # 强制清理
         npm ci --legacy-peer-deps
         
     - name: Build project
@@ -29,6 +31,8 @@ jobs:
         REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || '' }}
       run: |
         cd onething
+        echo "Cleaning previous build directory..."
+        rm -rf build # 强制清理旧构建
         CI=false npm run build
         
     - name: Install SSH key
