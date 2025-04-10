@@ -5,20 +5,23 @@ import {
   Alert
 } from '@mui/material';
 import { SendRounded, AutoAwesomeRounded, WifiOff } from '@mui/icons-material';
-import aiService, { Message, AIResponse } from '../../services/aiService';
+import aiService, { AIResponse } from '../../services/aiService';
 
 interface CompanionProps {
   onClose?: () => void;
   embedded?: boolean;
 }
 
+// 定义本地消息类型
+interface CompanionMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+}
+
 const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
-  const [messages, setMessages] = useState<Array<{
-    id: string;
-    text: string;
-    sender: 'user' | 'assistant';
-    timestamp: Date;
-  }>>([
+  const [messages, setMessages] = useState<CompanionMessage[]>([
     {
       id: '1',
       text: '你好！我是你的OneThing AI伙伴，我可以帮助你设定目标、分解任务，或者聊聊你的进展。有什么我能帮到你的吗？',
@@ -68,7 +71,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
     if (!text.trim()) return;
     
     // 添加用户消息到消息列表
-    const userMessage = {
+    const userMessage: CompanionMessage = {
       id: Date.now().toString(),
       text,
       sender: 'user' as const,
@@ -83,7 +86,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       // 如果离线模式，使用简单回复
       if (isOfflineMode) {
         setTimeout(() => {
-          const offlineResponse = {
+          const offlineResponse: CompanionMessage = {
             id: (Date.now() + 1).toString(),
             text: '我目前无法连接到服务器。我能提供一些基本帮助，但无法分析复杂问题。请检查你的网络连接，或稍后再试。',
             sender: 'assistant' as const,
@@ -95,18 +98,18 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
         return;
       }
       
-      // 构建会话历史
-      const conversationHistory: Message[] = [
+      // 构建会话历史 - 将本地消息格式转换为API所需格式
+      const apiMessages = [
         aiService.getDefaultSystemMessage(),
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
           content: msg.text
         })),
-        { role: 'user', content: text }
+        { role: 'user' as const, content: text }
       ];
       
       // 使用sendMessageToAI而不是getAIResponse
-      const aiResponseText = await aiService.sendMessageToAI(conversationHistory);
+      const aiResponseText = await aiService.sendMessageToAI(apiMessages);
       
       // 提取回复中的建议
       const extractedSuggestions = extractSuggestions(aiResponseText);
@@ -115,7 +118,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       }
       
       // 添加AI回复到消息列表
-      const aiMessage = {
+      const aiMessage: CompanionMessage = {
         id: (Date.now() + 1).toString(),
         text: aiResponseText,
         sender: 'assistant' as const,
@@ -123,7 +126,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       };
       
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
+    } catch (error: any) {
       handleError(error);
     } finally {
       setIsLoading(false);
@@ -133,7 +136,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
   // 处理错误
   const handleError = (error: any) => {
     console.error('AI回复错误:', error);
-    const errorMessage = {
+    const errorMessage: CompanionMessage = {
       id: (Date.now() + 1).toString(),
       text: '抱歉，我遇到了一些问题。请稍后再试或联系支持人员。',
       sender: 'assistant' as const,

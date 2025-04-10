@@ -26,14 +26,15 @@ import { useTaskStore } from '../../store/taskStore';
 import { isMobile } from '../../i18n';
 import { useNavigate } from 'react-router-dom';
 
-// 消息接口
-interface Message {
+// 消息接口 - 重命名为EnhancedMessage避免冲突
+interface EnhancedMessage {
   id: string;
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
   suggestions?: string[];
   thinking?: boolean;
+  isError?: boolean; // 添加错误标志
 }
 
 // 自定义头像样式
@@ -50,7 +51,7 @@ const AvatarStyle = {
 
 const EnhancedCompanion: React.FC = () => {
   const theme = useTheme();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<EnhancedMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
@@ -83,7 +84,7 @@ const EnhancedCompanion: React.FC = () => {
     }
 
     // 如果没有保存的历史，使用默认欢迎消息
-    const welcomeMessage: Message = {
+    const welcomeMessage: EnhancedMessage = {
       id: Date.now().toString(),
       text: '你好，我是你的AI目标管理助手。我能帮你设定目标、分解任务，或者给你提供情绪支持。今天有什么我能帮到你的吗？',
       sender: 'ai',
@@ -147,7 +148,7 @@ const EnhancedCompanion: React.FC = () => {
       localStorage.removeItem('voiceInputText');
       // 延迟一下发送，确保状态更新
       setTimeout(() => {
-        const userMessage: Message = {
+        const userMessage: EnhancedMessage = {
           id: Date.now().toString(),
           text: voiceInputText,
           sender: 'user',
@@ -170,7 +171,7 @@ const EnhancedCompanion: React.FC = () => {
         
         setIsLoading(true);
         
-        // 使用已有的发送逻辑发送消息
+        // 使用已有的发送逻辑发送消息 - 将本地消息格式转换为API所需格式
         aiService.sendMessageToAI([
           aiService.getDefaultSystemMessage(),
           {
@@ -235,7 +236,7 @@ const EnhancedCompanion: React.FC = () => {
   const handleSendMessage = async () => {
     if (input.trim() === '') return;
 
-    const userMessage: Message = {
+    const userMessage: EnhancedMessage = {
       id: Date.now().toString(),
       text: input,
       sender: 'user',
@@ -262,8 +263,8 @@ const EnhancedCompanion: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // 构建发送给AI的消息上下文
-      const messageHistory = [
+      // 构建发送给AI的消息上下文 - 将本地消息格式转换为API所需格式
+      const apiMessages = [
         aiService.getDefaultSystemMessage(),
         {
           role: 'system' as const,
@@ -282,7 +283,7 @@ const EnhancedCompanion: React.FC = () => {
       ];
 
       // 发送给AI服务
-      const response = await aiService.sendMessageToAI(messageHistory);
+      const response = await aiService.sendMessageToAI(apiMessages);
       
       // 移除思考中消息并添加AI回复
       setMessages(prev => {
@@ -302,7 +303,7 @@ const EnhancedCompanion: React.FC = () => {
           },
         ];
       });
-    } catch (error) {
+    } catch (error: any) { // 添加类型注解
       // 处理错误并移除thinking消息
       console.error('AI服务错误:', error);
       setMessages(prev => {
@@ -324,7 +325,7 @@ const EnhancedCompanion: React.FC = () => {
 
   // 处理快捷建议点击
   const handleSuggestionClick = (text: string) => {
-    const userMessage: Message = {
+    const userMessage: EnhancedMessage = {
       id: Date.now().toString(),
       text,
       sender: 'user',
@@ -353,7 +354,7 @@ const EnhancedCompanion: React.FC = () => {
   };
 
   // 渲染消息
-  const renderMessage = (message: Message) => {
+  const renderMessage = (message: EnhancedMessage) => {
     // 如果是思考中消息
     if (message.thinking) {
       return (

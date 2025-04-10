@@ -7,6 +7,16 @@ const mongoose = require('mongoose');
 const path = require('path');
 const { typeDefs, resolvers } = require('./schema');
 require('dotenv').config(); // 确保加载环境变量
+
+// ---> 添加调试日志 <---
+console.log('--- DEBUG: Environment Variables ---');
+console.log(`DEEPSEEK_API_URL: ${process.env.DEEPSEEK_API_URL ? 'Loaded (masked)' : 'NOT LOADED'}`);
+console.log(`DEEPSEEK_API_KEY: ${process.env.DEEPSEEK_API_KEY ? 'Loaded (masked)' : 'NOT LOADED'}`);
+console.log(`BACKUP_AI_API_URL: ${process.env.BACKUP_AI_API_URL ? 'Loaded (masked)' : 'NOT LOADED'}`);
+console.log(`BACKUP_AI_API_KEY: ${process.env.BACKUP_AI_API_KEY ? 'Loaded (masked)' : 'NOT LOADED'}`);
+console.log('----------------------------------');
+// ---> 结束调试日志 <---
+
 const axios = require('axios');
 
 const app = express();
@@ -100,97 +110,162 @@ app.post('/api/chat', async (req, res) => {
     
     // 验证请求数据
     if (!req.body || !req.body.messages || !Array.isArray(req.body.messages)) {
-      return res.status(400).json({ 
-        error: '无效的请求格式，缺少messages字段或格式不正确' 
+      return res.status(400).json({
+        error: '无效的请求格式，缺少messages字段或格式不正确'
       });
     }
-    
-    // 请求DeepSeek API
-    const apiUrl = process.env.DEEPSEEK_API_URL || 'https://api.lkeap.cloud.tencent.com/v1/chat/completions';
-    let apiKey = process.env.DEEPSEEK_API_KEY;
-    
-    if (!apiKey) {
-      console.error('错误：DEEPSEEK_API_KEY未设置');
+    const messages = req.body.messages; // <-- 只获取 messages
+
+    // 请求DeepSeek API - 修改为支持主备API切换的逻辑
+    const primaryApiUrl = process.env.DEEPSEEK_API_URL || 'https://api.lkeap.cloud.tencent.com/v1/chat/completions';
+    const primaryApiKey = process.env.DEEPSEEK_API_KEY;
+
+    // 添加备用API配置
+    const backupApiUrl = process.env.BACKUP_AI_API_URL;
+    const backupApiKey = process.env.BACKUP_AI_API_KEY;
+
+    // 记录API配置状态
+    const hasPrimaryConfig = !!primaryApiKey;
+    const hasBackupConfig = !!(backupApiUrl && backupApiKey);
+
+    // 日志记录配置状态（不显示实际密钥）
+    console.log('API配置状态:', {
+      primary: hasPrimaryConfig ? '已配置' : '未配置',
+      backup: hasBackupConfig ? '已配置' : '未配置'
+    });
+
+    if (!hasPrimaryConfig && !hasBackupConfig) {
+      console.error('错误：未配置任何可用的AI API密钥');
       return res.status(500).json({ error: 'API密钥未配置' });
     }
-    
-    // DeepSeek API密钥通常以"sk-"开头，确保格式正确
-    if (!apiKey.trim().startsWith('sk-')) {
-      console.warn('警告：API密钥格式可能不正确，应以sk-开头');
-    }
-    
-    // 打印请求信息但不包含敏感内容
-    console.log(`请求AI服务: ${apiUrl}`);
-    
-    // 在API处理函数中添加
-    console.log('请求设备类型:', req.headers['user-agent']);
-    console.log('API密钥使用情况:', !!process.env.DEEPSEEK_API_KEY);
-    
-    // 添加重试逻辑
+
+    console.log(`首先尝试主API服务: ${primaryApiUrl}`);
+
     let response;
     let retryCount = 0;
-    const maxRetries = 2; // 增加到最多重试两次
-    
+    const maxRetries = hasBackupConfig ? 1 : 0;
+
     while (retryCount <= maxRetries) {
+      let currentApiUrl = null;
+      let currentApiKey = null;
+      const apiSource = retryCount === 0 ? "主API" : "备用API";
+
       try {
+        // Determine current API URL and Key
+        if (retryCount === 0) {
+          currentApiUrl = primaryApiUrl;
+          currentApiKey = primaryApiKey;
+          // Check if primary key exists before proceeding
+          if (!currentApiKey) {
+             console.error('主API密钥未配置，跳过主API尝试。');
+             if (hasBackupConfig) {
+                 retryCount++; // Move to backup attempt
+                 continue;
+             } else {
+                 // 直接返回配置错误给前端可能更好
+                 // throw new Error('主API密钥缺失且无备用配置。');
+                 return res.status(500).json({ error: '主 AI 服务配置缺失，且无备用配置。' });
+             }
+          }
+        } else { // retryCount must be 1, attempting backup
+          currentApiUrl = backupApiUrl;
+          currentApiKey = backupApiKey;
+           // Check if backup key exists before proceeding
+          if (!currentApiKey) {
+              console.error('备用API密钥未配置，无法尝试备用API。');
+              // 如果主API失败且备用也未配置
+              // throw new Error('主API失败且备用API密钥缺失。');
+              return res.status(500).json({ error: '主 AI 服务失败，且备用 AI 服务未配置。' });
+          }
+        }
+
+        // --- 定义 requestData INSIDE the loop for this attempt ---
+        let requestData; // 在循环内定义
+        if (retryCount === 0) { // 主 API 尝试
+          requestData = {
+            messages: messages, // 使用从外部获取的 messages
+            model: "deepseek-v3" // 主 API 模型
+          };
+          console.log(`[Attempt ${retryCount + 1}] 为主API构建 requestData`);
+        } else { // 备用 API 尝试
+          requestData = {
+            messages: messages, // 使用从外部获取的 messages
+            model: "deepseek-ai/DeepSeek-V3" // 备用 API 模型
+          };
+          console.log(`[Attempt ${retryCount + 1}] 为备用API构建 requestData`);
+        }
+        // --- requestData is now defined for this scope ---
+
+        console.log(`[Attempt ${retryCount + 1}/${maxRetries + 1}] 尝试使用 ${apiSource}: ${currentApiUrl}`);
+        console.log(`[Attempt ${retryCount + 1}] 使用 ${apiSource} Key: ${currentApiKey.substring(0, 5)}...${currentApiKey.substring(currentApiKey.length - 4)}`);
+        console.log(`[Attempt ${retryCount + 1}] 发送请求体: ${JSON.stringify(requestData)}`);
+
         response = await axios({
           method: 'post',
-          url: apiUrl,
+          url: currentApiUrl,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey.trim()}` // 确保没有多余空格
+            'Authorization': `Bearer ${currentApiKey.trim()}` // Trim just in case
           },
-          data: req.body,
-          timeout: 30000 // 30秒超时
+          data: requestData, // 使用在当前循环作用域中定义的 requestData
+          timeout: 30000 // 增加超时到30秒
         });
-        
-        // 如果请求成功，跳出循环
-        break;
+
+        console.log(`[Attempt ${retryCount + 1}] ${apiSource} 请求成功 (Status: ${response.status})`);
+        break; // Success!
+
       } catch (error) {
-        if (error.response && error.response.status === 401 && retryCount < maxRetries) {
-          // 如果是401错误并且还可以重试，尝试从备用key中获取
-          console.warn(`API密钥认证失败，尝试使用备用密钥(尝试${retryCount + 1}/${maxRetries})`);
-          
-          // 模拟AI响应以防所有API密钥都失效
-          if (retryCount === maxRetries - 1) {
-            console.warn('所有API密钥均已失效，使用模拟响应');
-            
-            // 创建模拟响应以保障基本的用户体验
-            const fakeResponse = {
-              choices: [
-                {
-                  message: {
-                    content: "很抱歉，AI服务暂时不可用，请稍后再试。您可以继续使用应用的其他功能。如有紧急需求，请联系管理员。",
-                    role: "assistant"
-                  },
-                  finish_reason: "stop"
-                }
-              ]
-            };
-            
-            serviceStatus.ai_service = false;
-            return res.json(fakeResponse);
+        console.error(`[Attempt ${retryCount + 1}] ${apiSource} 请求失败:`, error.message);
+
+        if (error.response) {
+          console.error(`[Attempt ${retryCount + 1}] 错误响应数据:`, JSON.stringify(error.response.data));
+          console.error(`[Attempt ${retryCount + 1}] 错误状态码:`, error.response.status);
+          if (hasBackupConfig && retryCount === 0) {
+            const errorCode = error.response.data?.error?.code;
+            const errorMessage = error.response.data?.error?.message;
+            if (
+              (errorCode === '20031' || (errorMessage && errorMessage.includes('not enough quota'))) ||
+              error.response.status === 401 || // Unauthorized
+              error.response.status === 429 || // Too Many Requests
+              error.response.status >= 500    // Server errors
+            ) {
+              console.log(`[Attempt ${retryCount + 1}] 主API因特定错误 (${error.response.status}/${errorCode || 'N/A'}) 失败，切换到备用API`);
+              retryCount++;
+              continue; // Try backup
+            }
           }
-          
-          retryCount++;
-          continue;
         }
-        
-        // 其他错误或重试次数已用完，抛出异常
+
+        if (hasBackupConfig && retryCount === 0) {
+          console.log(`[Attempt ${retryCount + 1}] 主API发生其他类型错误，仍尝试切换到备用API`);
+          retryCount++;
+          continue; // Try backup
+        }
+
+        console.error(`[Attempt ${retryCount + 1}] 无法重试或 ${apiSource} 最终失败。`);
+        // 在这里抛出错误，让外层 catch 处理兜底响应
         throw error;
       }
+    } // End while loop
+
+    // 检查 response 对象是否存在且包含数据 (防御性编程)
+    if (!response || typeof response.data === 'undefined') {
+      console.error('错误：API 调用成功跳出循环，但 response 或 response.data 无效！', response);
+      throw new Error('InternalServerError: Invalid response object after successful API call.');
     }
-    
-    console.log('DeepSeek API响应状态:', response.status);
-    // 更新AI服务状态
+
+    console.log('成功获取到响应数据，准备发送回前端。结构预览:', JSON.stringify(response.data).substring(0, 250) + '...');
     serviceStatus.ai_service = true;
+
+    console.log('尝试执行 res.json(response.data)...');
     res.json(response.data);
-  } catch (error) {
-    console.error('调用DeepSeek API出错:', error.message);
-    // 更新AI服务状态
+    console.log('res.json(response.data) 执行完毕，成功响应已发送。');
+
+  } catch (error) { // 最外层的 catch 块
+    console.error('在 /api/chat 处理的顶层 catch 块捕获到错误:', error.message);
+    console.error('错误堆栈:', error.stack); // 打印堆栈帮助调试
     serviceStatus.ai_service = false;
-    
-    // 提供降级体验
+
     const fallbackResponse = {
       choices: [
         {
@@ -202,29 +277,21 @@ app.post('/api/chat', async (req, res) => {
         }
       ]
     };
-    
+
     if (error.response) {
-      console.error('错误响应数据:', JSON.stringify(error.response.data));
-      console.error('错误状态码:', error.response.status);
-      
-      // 401错误处理
-      if (error.response.status === 401) {
-        console.error('DeepSeek API密钥认证失败，请检查您的API密钥是否有效。');
-        return res.json(fallbackResponse); // 返回降级响应而非错误状态
-      }
-      
-      return res.json(fallbackResponse); // 返回降级响应而非错误状态
+      console.error('Axios 错误响应数据:', JSON.stringify(error.response.data));
+      console.error('Axios 错误状态码:', error.response.status);
+    } else if (error.code) {
+      console.error(`网络或系统错误代码: ${error.code}`);
     }
-    
-    // 网络错误也返回降级响应
-    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || 
-        error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
-      console.error(`网络错误: ${error.code}`);
-      return res.json(fallbackResponse);
+
+    if (!res.headersSent) {
+      console.log('发送兜底错误响应到前端...');
+      // 发送兜底，但不一定是 500 错误，根据情况
+      res.status(error.response?.status || 503).json(fallbackResponse); // 使用 503 Service Unavailable 或原始错误码
+    } else {
+      console.error('错误：尝试发送兜底响应失败，因为响应头已发送！');
     }
-    
-    // 其他所有错误都返回降级响应
-    res.json(fallbackResponse);
   }
 });
 

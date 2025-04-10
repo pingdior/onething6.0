@@ -4,10 +4,11 @@ import {
   List, ListItem, Avatar, Chip
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { getAIResponse } from '../../services/aiService';
+import aiService, { AIResponse } from '../../services/aiService';
 import { useTranslation } from 'react-i18next';
 
-interface Message {
+// 重命名为ChatMessage以避免冲突
+interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'ai';
@@ -16,7 +17,8 @@ interface Message {
 
 const ChatSidebar: React.FC = () => {
   const { t } = useTranslation();
-  const [messages, setMessages] = useState<Message[]>([]);
+  // 修改状态类型为ChatMessage
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -25,7 +27,7 @@ const ChatSidebar: React.FC = () => {
     // 初始欢迎消息
     if (messages.length === 0) {
       setIsLoading(true);
-      getAIResponse('').then(response => {
+      aiService.getAIResponse('').then((response: AIResponse) => {
         setMessages([
           {
             id: '1',
@@ -35,9 +37,17 @@ const ChatSidebar: React.FC = () => {
           }
         ]);
         setIsLoading(false);
+      }).catch((error: any) => { // 添加类型注解
+        console.error("获取初始消息失败:", error);
+        setMessages([{
+          id: '1',
+          text: t('companion.initialError'),
+          sender: 'ai'
+        }]);
+        setIsLoading(false);
       });
     }
-  }, [messages.length]);
+  }, [messages.length, t]);
   
   // 自动滚动到最新消息
   useEffect(() => {
@@ -48,7 +58,7 @@ const ChatSidebar: React.FC = () => {
     if (!input.trim()) return;
     
     // 添加用户消息
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: input,
       sender: 'user'
@@ -60,23 +70,52 @@ const ChatSidebar: React.FC = () => {
     
     // 获取AI响应
     try {
-      const response = await getAIResponse(input);
-      const aiMessage: Message = {
+      // 1. 获取默认系统提示
+      const systemMessage = aiService.getDefaultSystemMessage();
+
+      // 2. 获取最近的、非错误的聊天记录 (例如最近10条)
+      const historyLimit = 10;
+      const recentValidMessages = messages
+        .filter(msg => !(msg.sender === 'ai' && msg.text.includes('非常抱歉，AI服务目前无法连接'))) // 过滤掉 AI 错误消息
+        .slice(-historyLimit); // 只取最后 N 条
+
+      // 3. 准备发送给 API 的消息数组
+      const apiMessages = [
+        systemMessage, // 总是包含系统提示
+        ...recentValidMessages.map(msg => ({
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.text
+        })),
+        {
+          role: 'user' as const,
+          content: userMessage.text // userMessage 是当前输入的消息
+        }
+      ];
+
+      console.log('[ChatSidebar] MESSAGES BEING SENT TO BACKEND:', JSON.stringify(apiMessages, null, 2));
+
+      console.log('[ChatSidebar] Sending CLEANED API messages:', apiMessages); // 确认清理后的内容
+
+      // 调用API
+      const responseText = await aiService.sendMessageToAI(apiMessages); // 使用清理后的 apiMessages
+      
+      const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: response.text, // AI回复通常不需要翻译
+        text: responseText, // AI回复通常不需要翻译
         sender: 'ai',
-        suggestions: response.suggestions // AI建议通常不需要翻译
+        suggestions: [] // AI建议通常不需要翻译
       };
       
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('获取AI响应失败', error);
-      // 添加错误消息
-      setMessages(prev => [...prev, {
+    } catch (error: any) {
+      console.error("发送消息失败:", error);
+      const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: t('companion.errorResponse'),
+        text: error.message || t('companion.sendError'),
         sender: 'ai'
-      }]);
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }

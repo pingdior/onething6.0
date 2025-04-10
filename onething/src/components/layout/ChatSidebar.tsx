@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, IconButton, Badge, Avatar, Divider } from '@mui/material';
 import { InfoOutlined as InfoIcon } from '@mui/icons-material';
-import aiService, { Message as AIMessage } from '../../services/aiService';
+import aiService, { Message as AIServiceMessage } from '../../services/aiService';
 import { useTaskStore, Task } from '../../store/taskStore';
 import taskDiscussService, { TaskDiscussEvent } from '../../services/taskDiscussService';
 import CompanionInfoDialog from '../companion/CompanionInfoDialog';
@@ -33,7 +33,7 @@ const ChatSidebar: React.FC = () => {
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   
   // 保存对话历史记录（用于API请求）
-  const [conversationHistory, setConversationHistory] = useState<AIMessage[]>([
+  const [conversationHistory, setConversationHistory] = useState<AIServiceMessage[]>([
     aiService.getDefaultSystemMessage()
   ]);
 
@@ -263,7 +263,7 @@ const ChatSidebar: React.FC = () => {
         setMessages(prev => [...prev, aiResponse]);
         
         // 将任务相关消息添加到对话历史
-        const aiMsg: AIMessage = {
+        const aiMsg: AIServiceMessage = {
           role: 'assistant',
           content: `我已经帮你添加了一个任务："${taskResult.title}" (${taskResult.time})`
         };
@@ -271,7 +271,7 @@ const ChatSidebar: React.FC = () => {
       } else {
         // 向AI发送消息
         // 创建消息历史记录
-        const userMsg: AIMessage = {
+        const userMsg: AIServiceMessage = {
           role: 'user',
           content: userInput
         };
@@ -296,7 +296,7 @@ const ChatSidebar: React.FC = () => {
           setMessages(prev => [...prev, aiResponse]);
           
           // 添加到对话历史
-          const aiMsg: AIMessage = {
+          const aiMsg: AIServiceMessage = {
             role: 'assistant',
             content: aiReply
           };
@@ -366,7 +366,7 @@ ${task.description ? `描述：${task.description}` : ''}`;
       setMessages(prev => [...prev, userMessage]);
       
       // 发送到AI
-      const userMsg: AIMessage = {
+      const userMsg: AIServiceMessage = {
         role: 'user',
         content: discussPrompt
       };
@@ -392,7 +392,7 @@ ${task.description ? `描述：${task.description}` : ''}`;
           setMessages(prev => [...prev, aiResponse]);
           
           // 添加到对话历史
-          const aiMsg: AIMessage = {
+          const aiMsg: AIServiceMessage = {
             role: 'assistant',
             content: aiReply
           };
