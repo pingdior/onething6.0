@@ -3,9 +3,13 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Typography, Box, Button, TextField, List, ListItem,
   ListItemIcon, ListItemText, Checkbox, Chip, Divider,
-  IconButton, Paper, LinearProgress
+  IconButton, Paper, LinearProgress, Tooltip
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { 
+  Close as CloseIcon, 
+  Edit as EditIcon,
+  Delete as DeleteIcon
+} from '@mui/icons-material';
 import { Goal, useGoalStore } from '../../store/goalStore';
 
 interface GoalDetailModalProps {
@@ -18,6 +22,13 @@ const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose, open }
   const [newSubGoal, setNewSubGoal] = useState('');
   const toggleSubGoalCompletion = useGoalStore(state => state.toggleSubGoalCompletion);
   const addSubGoal = useGoalStore(state => state.addSubGoal);
+  
+  // 添加以下代码 - 编辑状态管理
+  const [editingSubGoalId, setEditingSubGoalId] = useState<string | null>(null);
+  const [editedSubGoalTitle, setEditedSubGoalTitle] = useState('');
+  
+  // 添加从Store获取更新/删除方法
+  const updateGoal = useGoalStore(state => state.updateGoal);
   
   // 格式化截止日期
   const formatDeadline = (dateString: string) => {
@@ -73,6 +84,47 @@ const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose, open }
   
   const remainingDays = calculateRemainingDays(goal.deadline);
   const priorityColors = getPriorityColor(goal.priority);
+  
+  // 开始编辑子目标
+  const handleStartEdit = (subGoalId: string, title: string) => {
+    setEditingSubGoalId(subGoalId);
+    setEditedSubGoalTitle(title);
+  };
+  
+  // 保存编辑后的子目标
+  const handleSaveEdit = () => {
+    if (!editingSubGoalId || !editedSubGoalTitle.trim()) return;
+    
+    // 使用更新整个目标的方式来更新子目标
+    const updatedSubGoals = goal.subGoals?.map(subGoal => 
+      subGoal.id === editingSubGoalId 
+        ? { ...subGoal, title: editedSubGoalTitle }
+        : subGoal
+    );
+    
+    updateGoal(goal.id, { subGoals: updatedSubGoals });
+    
+    // 重置编辑状态
+    setEditingSubGoalId(null);
+    setEditedSubGoalTitle('');
+  };
+  
+  // 删除子目标
+  const handleRemoveSubGoal = (subGoalId: string) => {
+    if (!goal.subGoals) return;
+    
+    // 过滤掉要删除的子目标
+    const updatedSubGoals = goal.subGoals.filter(subGoal => subGoal.id !== subGoalId);
+    
+    // 更新目标
+    updateGoal(goal.id, { subGoals: updatedSubGoals });
+  };
+  
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setEditingSubGoalId(null);
+    setEditedSubGoalTitle('');
+  };
   
   return (
     <Dialog 
@@ -195,15 +247,60 @@ const GoalDetailModal: React.FC<GoalDetailModalProps> = ({ goal, onClose, open }
                         }}
                       />
                     </ListItemIcon>
-                    <ListItemText
-                      primary={subGoal.title}
-                      sx={{
-                        '& .MuiListItemText-primary': {
-                          textDecoration: subGoal.completed ? 'line-through' : 'none',
-                          color: subGoal.completed ? 'text.disabled' : 'text.primary'
-                        }
-                      }}
-                    />
+                    
+                    {editingSubGoalId === subGoal.id ? (
+                      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedSubGoalTitle}
+                          onChange={(e) => setEditedSubGoalTitle(e.target.value)}
+                          autoFocus
+                        />
+                        <Button 
+                          size="small" 
+                          onClick={handleSaveEdit} 
+                          disabled={!editedSubGoalTitle.trim()}
+                        >
+                          保存
+                        </Button>
+                        <Button size="small" onClick={handleCancelEdit}>
+                          取消
+                        </Button>
+                      </Box>
+                    ) : (
+                      <>
+                        <ListItemText
+                          primary={subGoal.title}
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              textDecoration: subGoal.completed ? 'line-through' : 'none',
+                              color: subGoal.completed ? 'text.disabled' : 'text.primary'
+                            }
+                          }}
+                        />
+                        <Box>
+                          <Tooltip title="编辑">
+                            <IconButton 
+                              size="small"
+                              onClick={() => handleStartEdit(subGoal.id, subGoal.title)}
+                              sx={{ mr: 0.5 }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="删除">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleRemoveSubGoal(subGoal.id)}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </>
+                    )}
                   </ListItem>
                 ))}
               </List>

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, IconButton, Paper, Divider, LinearProgress, 
   Chip, List, ListItem, ListItemText, ListItemIcon, Checkbox,
-  Button
+  Button, TextField, Tooltip
 } from '@mui/material';
 import { 
   ArrowBack, Flag, CalendarMonth, AccessTime, 
-  Add as AddIcon, MoreVert
+  Add as AddIcon, MoreVert, Edit as EditIcon, Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
@@ -20,6 +20,14 @@ const GoalDetail: React.FC = () => {
   
   const goals = useGoalStore(state => state.goals);
   const [goal, setGoal] = useState<any>(null);
+  
+  // 添加编辑状态管理
+  const [editingSubGoalId, setEditingSubGoalId] = useState<string | null>(null);
+  const [editedSubGoalTitle, setEditedSubGoalTitle] = useState('');
+  const [newSubGoalTitle, setNewSubGoalTitle] = useState('');
+  
+  // 从Store获取更多方法
+  const updateGoal = useGoalStore(state => state.updateGoal);
   
   // 获取目标数据
   useEffect(() => {
@@ -107,6 +115,85 @@ const GoalDetail: React.FC = () => {
       default:
         return { text: '普通', color: '#57A0FF', bgColor: '#E4F4FF' };
     }
+  };
+  
+  // 开始编辑子目标
+  const handleStartEdit = (subGoalId: string, title: string) => {
+    setEditingSubGoalId(subGoalId);
+    setEditedSubGoalTitle(title);
+  };
+  
+  // 保存编辑后的子目标
+  const handleSaveEdit = () => {
+    if (!editingSubGoalId || !editedSubGoalTitle.trim() || !goal) return;
+    
+    const updatedSubGoals = goal.subGoals.map((sg: any) => 
+      sg.id === editingSubGoalId 
+        ? { ...sg, title: editedSubGoalTitle }
+        : sg
+    );
+    
+    if (id) {
+      updateGoal(id, { subGoals: updatedSubGoals });
+    }
+    
+    // 如果是本地状态管理的模拟数据，也要更新本地状态
+    setGoal({
+      ...goal,
+      subGoals: updatedSubGoals
+    });
+    
+    // 重置编辑状态
+    setEditingSubGoalId(null);
+    setEditedSubGoalTitle('');
+  };
+  
+  // 删除子目标
+  const handleRemoveSubGoal = (subGoalId: string) => {
+    if (!goal) return;
+    
+    const updatedSubGoals = goal.subGoals.filter((sg: any) => sg.id !== subGoalId);
+    
+    if (id) {
+      updateGoal(id, { subGoals: updatedSubGoals });
+    }
+    
+    // 如果是本地状态管理的模拟数据，也要更新本地状态
+    setGoal({
+      ...goal,
+      subGoals: updatedSubGoals
+    });
+  };
+  
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setEditingSubGoalId(null);
+    setEditedSubGoalTitle('');
+  };
+  
+  // 添加新的子目标
+  const handleAddSubGoal = () => {
+    if (!newSubGoalTitle.trim() || !goal) return;
+    
+    const newSubGoal = {
+      id: `sg-${Date.now()}`,
+      title: newSubGoalTitle,
+      completed: false
+    };
+    
+    const updatedSubGoals = [...goal.subGoals, newSubGoal];
+    
+    if (id) {
+      updateGoal(id, { subGoals: updatedSubGoals });
+    }
+    
+    // 如果是本地状态管理的模拟数据，也要更新本地状态
+    setGoal({
+      ...goal,
+      subGoals: updatedSubGoals
+    });
+    
+    setNewSubGoalTitle('');
   };
   
   if (!goal) {
@@ -270,6 +357,10 @@ const GoalDetail: React.FC = () => {
                 size="small" 
                 startIcon={<AddIcon />}
                 sx={{ textTransform: 'none' }}
+                onClick={() => {
+                  // 光标自动聚焦到输入框
+                  document.getElementById('newSubGoalInput')?.focus();
+                }}
               >
                 添加
               </Button>
@@ -282,33 +373,98 @@ const GoalDetail: React.FC = () => {
                   <ListItem 
                     disablePadding 
                     sx={{ py: 1 }}
-                    secondaryAction={
-                      <Checkbox
-                        edge="end"
-                        checked={subGoal.completed}
-                        onChange={() => handleToggleSubGoal(subGoal.id)}
-                        sx={{
-                          color: '#4ECDC4',
-                          '&.Mui-checked': {
-                            color: '#4ECDC4',
-                          },
-                        }}
-                      />
-                    }
                   >
-                    <ListItemText
-                      primary={subGoal.title}
-                      primaryTypographyProps={{
-                        style: {
-                          textDecoration: subGoal.completed ? 'line-through' : 'none',
-                          color: subGoal.completed ? '#A1A1AA' : 'inherit',
-                        }
-                      }}
-                    />
+                    {editingSubGoalId === subGoal.id ? (
+                      <Box sx={{ display: 'flex', flex: 1, alignItems: 'center', gap: 1 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedSubGoalTitle}
+                          onChange={(e) => setEditedSubGoalTitle(e.target.value)}
+                          autoFocus
+                        />
+                        <Button 
+                          size="small" 
+                          onClick={handleSaveEdit}
+                          disabled={!editedSubGoalTitle.trim()}
+                        >
+                          保存
+                        </Button>
+                        <Button 
+                          size="small" 
+                          onClick={handleCancelEdit}
+                        >
+                          取消
+                        </Button>
+                      </Box>
+                    ) : (
+                      <>
+                        <Checkbox
+                          checked={subGoal.completed}
+                          onChange={() => handleToggleSubGoal(subGoal.id)}
+                          sx={{
+                            color: '#4ECDC4',
+                            '&.Mui-checked': {
+                              color: '#4ECDC4',
+                            },
+                          }}
+                        />
+                        <ListItemText
+                          primary={subGoal.title}
+                          primaryTypographyProps={{
+                            style: {
+                              textDecoration: subGoal.completed ? 'line-through' : 'none',
+                              color: subGoal.completed ? '#A1A1AA' : 'inherit',
+                            }
+                          }}
+                          sx={{ flex: 1 }}
+                        />
+                        <Box>
+                          <Tooltip title="编辑">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleStartEdit(subGoal.id, subGoal.title)}
+                              sx={{ mr: 0.5 }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="删除">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleRemoveSubGoal(subGoal.id)}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </>
+                    )}
                   </ListItem>
                 </React.Fragment>
               ))}
             </List>
+            
+            {/* 添加子目标输入框 */}
+            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+              <TextField
+                id="newSubGoalInput"
+                fullWidth
+                size="small"
+                placeholder="添加新子目标..."
+                value={newSubGoalTitle}
+                onChange={(e) => setNewSubGoalTitle(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddSubGoal()}
+              />
+              <Button 
+                variant="outlined" 
+                onClick={handleAddSubGoal}
+                disabled={!newSubGoalTitle.trim()}
+              >
+                添加
+              </Button>
+            </Box>
           </Paper>
           
           {/* 里程碑列表 */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, IconButton, Badge, Avatar, Divider } from '@mui/material';
 import { InfoOutlined as InfoIcon } from '@mui/icons-material';
-import aiService, { Message as AIServiceMessage } from '../../services/aiService';
+import aiService, { Message as AIServiceMessage, AIResponse } from '../../services/aiService';
 import { useTaskStore, Task } from '../../store/taskStore';
 import taskDiscussService, { TaskDiscussEvent } from '../../services/taskDiscussService';
 import CompanionInfoDialog from '../companion/CompanionInfoDialog';
@@ -282,12 +282,12 @@ const ChatSidebar: React.FC = () => {
         
         try {
           // 调用API获取回复
-          const aiReply = await aiService.sendMessageToAI(updatedHistory);
+          const aiReply: AIResponse = await aiService.sendMessageToAI(updatedHistory);
           
           // 创建AI回复消息
           const aiResponse: ChatMessage = {
             id: (Date.now() + 1).toString(),
-            text: aiReply,
+            text: aiReply.text,
             isAI: true,
             timestamp: new Date()
           };
@@ -295,10 +295,10 @@ const ChatSidebar: React.FC = () => {
           // 添加到UI消息列表
           setMessages(prev => [...prev, aiResponse]);
           
-          // 添加到对话历史
+          // 更新会话历史
           const aiMsg: AIServiceMessage = {
             role: 'assistant',
-            content: aiReply
+            content: aiReply.text
           };
           setConversationHistory(prev => [...prev, aiMsg]);
         } catch (error: any) {
@@ -383,7 +383,7 @@ ${task.description ? `描述：${task.description}` : ''}`;
           // 创建AI回复消息
           const aiResponse: ChatMessage = {
             id: (Date.now() + 1).toString(),
-            text: aiReply,
+            text: aiReply.text,
             isAI: true,
             timestamp: new Date()
           };
@@ -391,10 +391,10 @@ ${task.description ? `描述：${task.description}` : ''}`;
           // 添加到UI消息列表
           setMessages(prev => [...prev, aiResponse]);
           
-          // 添加到对话历史
+          // 更新会话历史
           const aiMsg: AIServiceMessage = {
             role: 'assistant',
-            content: aiReply
+            content: aiReply.text
           };
           setConversationHistory(prev => [...prev, aiMsg]);
         })

@@ -25,6 +25,7 @@ import { useGoalStore } from '../../store/goalStore';
 import { useTaskStore } from '../../store/taskStore';
 import { isMobile } from '../../i18n';
 import { useNavigate } from 'react-router-dom';
+import { Message, AIResponse } from '../../services/aiService';
 
 // 消息接口 - 重命名为EnhancedMessage避免冲突
 interface EnhancedMessage {
@@ -189,7 +190,7 @@ const EnhancedCompanion: React.FC = () => {
             content: voiceInputText,
           },
         ])
-        .then((response: string) => {
+        .then((response: AIResponse) => {
           // 移除思考中消息并添加AI回复
           setMessages(prev => {
             const filtered = prev.filter(m => m.id !== thinkingId);
@@ -197,14 +198,10 @@ const EnhancedCompanion: React.FC = () => {
               ...filtered,
               {
                 id: Date.now().toString(),
-                text: response,
+                text: response.text,
                 sender: 'ai',
                 timestamp: new Date(),
-                suggestions: [
-                  '告诉我更多',
-                  voiceInputText.toLowerCase().includes('目标') ? '分解这个目标' : '查看我的目标进度',
-                  voiceInputText.toLowerCase().includes('任务') ? '调整任务优先级' : '今日任务规划',
-                ],
+                suggestions: response.suggestions || []
               },
             ];
           });
@@ -292,14 +289,10 @@ const EnhancedCompanion: React.FC = () => {
           ...filtered,
           {
             id: Date.now().toString(),
-            text: response,
+            text: response.text,
             sender: 'ai',
             timestamp: new Date(),
-            suggestions: [
-              '告诉我更多',
-              input.toLowerCase().includes('目标') ? '分解这个目标' : '查看我的目标进度',
-              input.toLowerCase().includes('任务') ? '调整任务优先级' : '今日任务规划',
-            ],
+            suggestions: response.suggestions || []
           },
         ];
       });

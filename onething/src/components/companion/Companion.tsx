@@ -5,7 +5,7 @@ import {
   Alert
 } from '@mui/material';
 import { SendRounded, AutoAwesomeRounded, WifiOff } from '@mui/icons-material';
-import aiService, { AIResponse } from '../../services/aiService';
+import aiService, { AIResponse, Message } from '../../services/aiService';
 
 interface CompanionProps {
   onClose?: () => void;
@@ -112,7 +112,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       const aiResponseText = await aiService.sendMessageToAI(apiMessages);
       
       // 提取回复中的建议
-      const extractedSuggestions = extractSuggestions(aiResponseText);
+      const extractedSuggestions = extractSuggestions(aiResponseText.text);
       if (extractedSuggestions.length > 0) {
         setSuggestions(extractedSuggestions);
       }
@@ -120,7 +120,7 @@ const Companion: React.FC<CompanionProps> = ({ onClose, embedded = false }) => {
       // 添加AI回复到消息列表
       const aiMessage: CompanionMessage = {
         id: (Date.now() + 1).toString(),
-        text: aiResponseText,
+        text: aiResponseText.text,
         sender: 'assistant' as const,
         timestamp: new Date()
       };

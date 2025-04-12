@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, Grid, Paper, Chip, FormControl,
   RadioGroup, FormControlLabel, Radio, MenuItem, Select, InputLabel,
@@ -28,6 +28,57 @@ const Goals: React.FC = () => {
   const isOnMobile = isMobile();
   
   const goals = useGoalStore(state => state.goals);
+  const addGoal = useGoalStore(state => state.addGoal);
+  
+  // 添加事件监听器，处理来自AI的目标创建请求
+  useEffect(() => {
+    const handleAIGoalCreation = (event: CustomEvent) => {
+      console.log("[Goals页面] 收到AI创建目标事件开始处理:", event);
+      const newGoal = event.detail;
+      console.log("[Goals页面] 收到AI创建目标事件:", newGoal);
+      
+      if (newGoal && newGoal.title) {
+        try {
+          // 添加默认图标
+          if (!newGoal.icon) {
+            // 选择合适的图标
+            const lowerTitle = newGoal.title.toLowerCase();
+            if (/健身|运动|跑步|锻炼|减重|减肥/.test(lowerTitle)) {
+              newGoal.icon = '💪';
+            } else if (/学习|教育|课程|考试|认证/.test(lowerTitle)) {
+              newGoal.icon = '📚';
+            } else if (/工作|开发|项目|编程/.test(lowerTitle)) {
+              newGoal.icon = '💻';
+            } else if (/理财|投资|储蓄|记账/.test(lowerTitle)) {
+              newGoal.icon = '💰';
+            } else {
+              newGoal.icon = '🎯';
+            }
+          }
+          
+          console.log("[Goals页面] 准备添加目标，完整目标对象:", newGoal);
+          const goalId = addGoal(newGoal);
+          console.log("[Goals页面] 成功添加目标，ID:", goalId);
+          
+          // 显示添加成功的提示
+          setTimeout(() => {
+            window.alert("已成功添加目标：" + newGoal.title);
+          }, 500);
+        } catch (error) {
+          console.error("[Goals页面] 添加目标失败:", error);
+        }
+      }
+    };
+    
+    // 使用同样的事件名称
+    console.log("[Goals页面] 注册目标创建事件监听器 'onething-add-goal'");
+    window.addEventListener('onething-add-goal', handleAIGoalCreation as EventListener);
+    
+    return () => {
+      console.log("[Goals页面] 移除目标创建事件监听器");
+      window.removeEventListener('onething-add-goal', handleAIGoalCreation as EventListener);
+    };
+  }, [addGoal]);
   
   // 过滤目标
   const filteredGoals = goals.filter(goal => {
